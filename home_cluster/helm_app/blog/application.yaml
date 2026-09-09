@@ -55,7 +55,7 @@ spec:
         config:
           SITE_URL: "https://geracorp.org"
           SITE_TITLE: "Нейрослоп blog"
-          SITE_DESCRIPTION: "Личный блог о коде, devops и Ai"
+          SITE_DESCRIPTION: "Личный блог о коде, devops и Ai."
           SITE_AUTHOR: "gera"
           TRUST_PROXY: "loopback,uniquelocal"
           COOKIE_SECURE: "true"
