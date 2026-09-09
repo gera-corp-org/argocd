@@ -60,5 +60,9 @@ spec:
           TRUST_PROXY: "loopback,uniquelocal"
           COOKIE_SECURE: "true"
 
+        namespace:
+          create: false
+          name: blog
+
         secrets:
           existingSecret: blog-secrets
