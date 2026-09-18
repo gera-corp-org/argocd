@@ -75,9 +75,9 @@ spec:
     helm:
       valuesObject:
         replicaCount: 1
-        image:
-          repository: docker.io/seafileltd/seafile-mc
-          tag: '13.0.25'
+        # image:
+        #   repository: docker.io/seafileltd/seafile-mc
+        #   tag: '13.0.25'
         seafile:
           serverHostname: sea.geracorp.org
           protocol: https
