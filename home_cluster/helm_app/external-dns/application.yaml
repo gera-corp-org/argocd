@@ -42,5 +42,10 @@ spec:
               name: cloudflare-api-key
         extraArgs:
         - --domain-filter=local.geracorp.work
+        # В чарте 1.22.0 policy стало обязательным значением без дефолта. До
+        # 1.21.1 включительно чарт сам подставлял upsert-only, поэтому здесь
+        # именно upsert-only — оно повторяет поведение работающего релиза.
+        # sync разрешил бы external-dns удалять записи в Cloudflare.
+        policy: upsert-only
         provider:
           name: cloudflare
