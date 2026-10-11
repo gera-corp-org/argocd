@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-xray-bt-blocks
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: kube-prometheus-stack
+  annotations:
+    grafana_folder: "VPN"
+data:
+  xray-bt-blocks.json: |-
+    {
+      "uid": "xray-bt-blocks",
+      "title": "VPN — BitTorrent blocks (xray)",
+      "tags": ["vpn", "bittorrent", "xray"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "editable": true,
+      "time": { "from": "now-24h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Blocked BitTorrent attempts (24h)",
+          "description": "Connections dropped by the xray routing rule on the entry node. They never reach the exit.",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(increase(xray_bt_block_total[24h]))",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "colorMode": "value",
+            "graphMode": "area",
+            "textMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "thresholds" },
+              "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Attempts per hour, by client",
+          "gridPos": { "h": 6, "w": 18, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum by (client) (increase(xray_bt_block_total[1h]))"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 40, "stacking": { "mode": "normal" }, "lineWidth": 1 } },
+            "overrides": []
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 3,
+          "type": "table",
+          "title": "Totals by client / source IP (all time)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_bt_block_total",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Client", "ip": "Source IP", "Value": "Blocked" } } },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Blocked", "desc": true } ] } }
+          ],
+          "fieldConfig": { "defaults": {}, "overrides": [] }
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "When attempts happened (5m buckets)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum by (client, ip) (increase(xray_bt_block_total[5m]))"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 5, "showPoints": "auto" } },
+            "overrides": []
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } }
+        }
+      ]
+    }

@@ -16,7 +16,9 @@ spec:
             description: >-
               Probe through the tunnel failed for target {{ $labels.target }}.
               VALUE = {{ $value }}
-          expr: vless_probe_up == 0
+          # target="homs" is the control probe (direct egress, no tunnel) — it has
+          # its own rule below; reporting it as "tunnel down" is a false positive.
+          expr: vless_probe_up{target!="homs"} == 0
           for: 2m
           labels:
             severity: critical
@@ -28,7 +30,7 @@ spec:
             description: >-
               More than half of the probes are failing on target {{ $labels.target }}
               (fail_ratio = {{ $value }}).
-          expr: vless_probe_fail_ratio > 0.5
+          expr: vless_probe_fail_ratio{target!="homs"} > 0.5
           for: 5m
           labels:
             severity: warning
@@ -41,8 +43,28 @@ spec:
               The observed exit IP does not match expected_exit_ip for target
               {{ $labels.target }}. The tunnel may be bypassed or the exit node changed.
               VALUE = {{ $value }}
-          expr: vless_exit_ip_match == 0
+          expr: vless_exit_ip_match{target!="homs"} == 0
           for: 5m
           labels:
             severity: critical
+            service: network
+
+        # Control probe: the entry host's OWN egress (no tunnel). Flags that the
+        # entry node itself lost internet — useful to tell "our hand broke" from
+        # "the host broke", but it must never be worded as a tunnel failure.
+        # Kept at warning + longer `for`: foreign HTTPS from RU is delayed/poisoned
+        # often enough that a short window flaps (api.ipify.org resolves to bogus
+        # 8.47.69.0 / 8.6.112.0 from this host — DNS substitution).
+        - alert: VlessEntryHostEgressDown
+          annotations:
+            summary: Entry node lost direct internet access (homs control probe)
+            description: >-
+              The control probe from the entry node to its own egress endpoint has
+              been failing for 15 minutes — the host's direct internet path is broken
+              (DNS substitution / DPI). This is NOT a tunnel failure: the tunnel is
+              measured by target="trol".
+          expr: vless_probe_up{target="homs"} == 0
+          for: 15m
+          labels:
+            severity: warning
             service: network
