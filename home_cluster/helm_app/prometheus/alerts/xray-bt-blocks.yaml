@@ -1,0 +1,76 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: xray-bt-blocks
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+spec:
+  groups:
+    - name: xray-bt-blocks
+      rules:
+        - alert: BitTorrentBlocked
+          annotations:
+            summary: >-
+              BitTorrent blocked: client {{ $labels.client }} from {{ $labels.ip }}
+            description: >-
+              xray dropped {{ $value | humanize }} BitTorrent connection(s) in the last
+              10 minutes for client {{ $labels.client }} (source IP {{ $labels.ip }}).
+              The connection never left the entry node.
+          expr: increase(xray_bt_block_total[10m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+            service: network
+
+        - alert: BitTorrentAttemptsRecurring
+          annotations:
+            summary: >-
+              Repeated BitTorrent attempts: {{ $labels.client }} ({{ $labels.ip }})
+            description: >-
+              More than 20 BitTorrent connections were blocked for client
+              {{ $labels.client }} from {{ $labels.ip }} in the last hour.
+              Somebody on that device keeps trying to use P2P through the tunnel.
+          expr: increase(xray_bt_block_total[1h]) > 20
+          for: 5m
+          labels:
+            severity: critical
+            service: network
+
+        # Behaviour layer: obfuscation-independent. Client looks like a P2P swarm —
+        # many distinct peers on non-standard ports — even when the signature
+        # filter sees nothing (muTP/UDP, forced protocol encryption, nested tunnel).
+        - alert: BitTorrentSuspectedFanout
+          annotations:
+            summary: >-
+              P2P-like connection fan-out: {{ $labels.client }}
+            description: >-
+              Client {{ $labels.client }} opened {{ $value }} distinct destinations
+              on non-standard ports (not 80/443/53) in the last 5 minutes. Normal
+              traffic — web, video, push notifications — stays in single digits.
+              This shape matches a BitTorrent swarm and is visible regardless of
+              protocol encryption or UDP transport.
+          expr: xray_client_unique_peers > 50
+          for: 5m
+          labels:
+            severity: warning
+            service: network
+
+        # Automatic enforcement: the watcher on the entry node cuts a source IP off
+        # the VPN port once it proves BitTorrent by signature. Fired here so the
+        # operator knows who got cut and can talk to them (bans expire by themselves).
+        - alert: BitTorrentClientAutobanned
+          annotations:
+            summary: >-
+              Auto-banned for BitTorrent: {{ $labels.ip }}
+            description: >-
+              Source IP {{ $labels.ip }} was cut off the VPN port by the auto-ban
+              watcher: it produced enough BitTorrent blocks inside the window to
+              cross the threshold. The ban expires on its own; release it early with
+              `xray-autoban.py --unban {{ $labels.ip }}` on the entry node.
+          expr: increase(xray_autoban_ban_total[1h]) > 0
+          for: 0m
+          labels:
+            severity: warning
+            service: network
