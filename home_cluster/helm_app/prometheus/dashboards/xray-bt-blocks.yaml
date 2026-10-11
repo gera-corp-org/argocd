@@ -118,6 +118,40 @@ data:
             "overrides": []
           },
           "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 5,
+          "type": "table",
+          "title": "Забаненные IP (автобан)",
+          "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left and the exact moment the ban lifts. Rows disappear when the ban expires.",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_banned", "format": "table", "instant": true },
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_remaining_seconds", "format": "table", "instant": true },
+            { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(time() + xray_autoban_remaining_seconds) * 1000", "format": "table", "instant": true },
+            { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_trigger_events", "format": "table", "instant": true }
+          ],
+          "transformations": [
+            { "id": "joinByField", "options": { "byField": "ip", "mode": "outer" } },
+            { "id": "organize", "options": {
+                "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "__name__": true, "job": true, "instance": true, "until": true },
+                "renameByName": { "ip": "IP", "client": "Клиент", "Value #A": "Забанен", "Value #B": "Осталось, с", "Value #C": "Снимется в", "Value #D": "Событий до бана" },
+                "indexByName": {} } },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Осталось, с", "desc": false } ] } }
+          ],
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Снимется в" }, "properties": [ { "id": "unit", "value": "dateTimeAsIso" } ] },
+              { "matcher": { "id": "byName", "options": "Осталось, с" }, "properties": [
+                  { "id": "unit", "value": "dtdurations" },
+                  { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+                  { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 1800 }, { "color": "green", "value": 5400 } ] } } ] },
+              { "matcher": { "id": "byName", "options": "Забанен" }, "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }, { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "нет", "color": "green", "index": 0 }, "1": { "text": "ДА", "color": "red", "index": 1 } } } ] } ] }
+            ]
+          },
+          "options": { "showHeader": true, "cellHeight": "sm", "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" } }
         }
       ]
     }
