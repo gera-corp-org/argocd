@@ -123,26 +123,31 @@ data:
           "id": 5,
           "type": "table",
           "title": "Забаненные IP (автобан)",
-          "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left and the exact moment the ban lifts. Rows disappear when the ban expires.",
+          "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left, the exact moment the ban lifts and the network owner of that address (Team Cymru whois + reverse DNS). Click an IP for a full external lookup. Rows disappear when the ban expires.",
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
             { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_banned", "format": "table", "instant": true },
-            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_remaining_seconds", "format": "table", "instant": true },
-            { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "(time() + xray_autoban_remaining_seconds) * 1000", "format": "table", "instant": true },
-            { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_trigger_events", "format": "table", "instant": true }
+            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_remaining_seconds)", "format": "table", "instant": true },
+            { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) ((time() + xray_autoban_remaining_seconds) * 1000)", "format": "table", "instant": true },
+            { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_trigger_events)", "format": "table", "instant": true },
+            { "refId": "E", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_whois)", "format": "table", "instant": true }
           ],
           "transformations": [
             { "id": "joinByField", "options": { "byField": "ip", "mode": "outer" } },
             { "id": "organize", "options": {
-                "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "__name__": true, "job": true, "instance": true, "until": true },
-                "renameByName": { "ip": "IP", "client": "Клиент", "Value #A": "Забанен", "Value #B": "Осталось, с", "Value #C": "Снимется в", "Value #D": "Событий до бана" },
-                "indexByName": {} } },
+                "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "__name__": true, "job": true, "instance": true, "until": true, "Value #E": true },
+                "renameByName": { "ip": "IP", "client": "Клиент", "Value #A": "Забанен", "Value #B": "Осталось, с", "Value #C": "Снимется в", "Value #D": "Событий до бана", "org": "Провайдер", "asn": "ASN", "cc": "Страна", "prefix": "Сеть", "ptr": "rDNS" },
+                "indexByName": { "IP": 0, "Клиент": 1, "Забанен": 2, "Осталось, с": 3, "Снимется в": 4, "Событий до бана": 5, "Провайдер": 6, "ASN": 7, "Страна": 8, "Сеть": 9, "rDNS": 10 } } },
             { "id": "sortBy", "options": { "sort": [ { "field": "Осталось, с", "desc": false } ] } }
           ],
           "fieldConfig": {
             "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } },
             "overrides": [
+              { "matcher": { "id": "byName", "options": "IP" }, "properties": [
+                  { "id": "links", "value": [
+                      { "title": "ipinfo.io", "url": "https://ipinfo.io/${__value.text}", "targetBlank": true },
+                      { "title": "RIPE DB", "url": "https://apps.db.ripe.net/db-web-ui/query?searchtext=${__value.text}", "targetBlank": true } ] } ] },
               { "matcher": { "id": "byName", "options": "Снимется в" }, "properties": [ { "id": "unit", "value": "dateTimeAsIso" } ] },
               { "matcher": { "id": "byName", "options": "Осталось, с" }, "properties": [
                   { "id": "unit", "value": "dtdurations" },
