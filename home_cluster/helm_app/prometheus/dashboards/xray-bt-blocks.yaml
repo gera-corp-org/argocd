@@ -12,7 +12,7 @@ data:
   xray-bt-blocks.json: |-
     {
       "uid": "xray-bt-blocks",
-      "title": "VPN — блокировки BitTorrent (xray)",
+      "title": "VPN — BitTorrent blocks (xray)",
       "tags": ["vpn", "bittorrent", "xray"],
       "timezone": "browser",
       "schemaVersion": 39,
@@ -36,8 +36,8 @@ data:
         {
           "id": 1,
           "type": "stat",
-          "title": "Заблокированные попытки BT (24 ч)",
-          "description": "Соединения, срезанные правилом маршрутизации xray на входной ноде — до выхода они не доходят.",
+          "title": "Blocked BitTorrent attempts (24h)",
+          "description": "Connections dropped by the xray routing rule on the entry node — they never reach the exit.",
           "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -63,7 +63,7 @@ data:
         {
           "id": 2,
           "type": "timeseries",
-          "title": "Попытки по часам, в разрезе клиентов",
+          "title": "Attempts per hour, by client",
           "gridPos": { "h": 6, "w": 18, "x": 6, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -82,7 +82,7 @@ data:
         {
           "id": 3,
           "type": "table",
-          "title": "Итоги по клиентам и адресам (за всё время)",
+          "title": "Totals by client / source IP (all time)",
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -95,15 +95,15 @@ data:
             }
           ],
           "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Клиент", "ip": "IP-адрес источника", "Value": "Заблокировано" } } },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Заблокировано", "desc": true } ] } }
+            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Client", "ip": "Source IP", "Value": "Blocked" } } },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Blocked", "desc": true } ] } }
           ],
           "fieldConfig": { "defaults": {}, "overrides": [] }
         },
         {
           "id": 4,
           "type": "timeseries",
-          "title": "Когда именно были попытки (шаг 5 мин)",
+          "title": "When attempts happened (5m buckets)",
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -122,8 +122,8 @@ data:
         {
           "id": 5,
           "type": "table",
-          "title": "Забаненные IP (автобан)",
-          "description": "Кого сейчас отрезал сторож автобана: адрес источника, профиль клиента за ним, остаток времени, точный момент снятия и владелец адреса (Team Cymru whois + reverse DNS). Клик по IP — полный внешний whois. Строки исчезают, когда бан истекает.",
+          "title": "Banned IPs (auto-ban)",
+          "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left, the exact moment the ban lifts and the network owner of that address (Team Cymru whois + reverse DNS). Click an IP for a full external lookup. Rows disappear when the ban expires.",
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -137,9 +137,9 @@ data:
             { "id": "joinByField", "options": { "byField": "ip", "mode": "outer" } },
             { "id": "organize", "options": {
                 "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "__name__": true, "job": true, "instance": true, "until": true, "Value #E": true },
-                "renameByName": { "ip": "IP", "client": "Клиент", "Value #A": "Забанен", "Value #B": "Осталось, с", "Value #C": "Снимется в", "Value #D": "Событий до бана", "org": "Провайдер", "asn": "ASN", "cc": "Страна", "prefix": "Сеть", "ptr": "rDNS" },
-                "indexByName": { "IP": 0, "Клиент": 1, "Забанен": 2, "Осталось, с": 3, "Снимется в": 4, "Событий до бана": 5, "Провайдер": 6, "ASN": 7, "Страна": 8, "Сеть": 9, "rDNS": 10 } } },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Осталось, с", "desc": false } ] } }
+                "renameByName": { "ip": "IP", "client": "Client", "Value #A": "Banned", "Value #B": "Time left", "Value #C": "Expires at", "Value #D": "Events to ban", "org": "Provider", "asn": "ASN", "cc": "Country", "prefix": "Prefix", "ptr": "rDNS" },
+                "indexByName": { "IP": 0, "Client": 1, "Banned": 2, "Time left": 3, "Expires at": 4, "Events to ban": 5, "Provider": 6, "ASN": 7, "Country": 8, "Prefix": 9, "rDNS": 10 } } },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Time left", "desc": false } ] } }
           ],
           "fieldConfig": {
             "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } },
@@ -148,12 +148,12 @@ data:
                   { "id": "links", "value": [
                       { "title": "ipinfo.io", "url": "https://ipinfo.io/${__value.text}", "targetBlank": true },
                       { "title": "RIPE DB", "url": "https://apps.db.ripe.net/db-web-ui/query?searchtext=${__value.text}", "targetBlank": true } ] } ] },
-              { "matcher": { "id": "byName", "options": "Снимется в" }, "properties": [ { "id": "unit", "value": "dateTimeAsIso" } ] },
-              { "matcher": { "id": "byName", "options": "Осталось, с" }, "properties": [
+              { "matcher": { "id": "byName", "options": "Expires at" }, "properties": [ { "id": "unit", "value": "dateTimeAsIso" } ] },
+              { "matcher": { "id": "byName", "options": "Time left" }, "properties": [
                   { "id": "unit", "value": "dtdurations" },
                   { "id": "custom.cellOptions", "value": { "type": "color-text" } },
                   { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 1800 }, { "color": "green", "value": 5400 } ] } } ] },
-              { "matcher": { "id": "byName", "options": "Забанен" }, "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }, { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "нет", "color": "green", "index": 0 }, "1": { "text": "ДА", "color": "red", "index": 1 } } } ] } ] }
+              { "matcher": { "id": "byName", "options": "Banned" }, "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }, { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "color": "green" }, "1": { "text": "YES", "color": "red" } } } ] } ] }
             ]
           },
           "options": { "showHeader": true, "cellHeight": "sm", "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" } }
