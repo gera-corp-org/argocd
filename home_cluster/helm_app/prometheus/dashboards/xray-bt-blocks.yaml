@@ -12,7 +12,7 @@ data:
   xray-bt-blocks.json: |-
     {
       "uid": "xray-bt-blocks",
-      "title": "VPN — BitTorrent blocks (xray)",
+      "title": "VPN — блокировки BitTorrent (xray)",
       "tags": ["vpn", "bittorrent", "xray"],
       "timezone": "browser",
       "schemaVersion": 39,
@@ -36,8 +36,8 @@ data:
         {
           "id": 1,
           "type": "stat",
-          "title": "Blocked BitTorrent attempts (24h)",
-          "description": "Connections dropped by the xray routing rule on the entry node. They never reach the exit.",
+          "title": "Заблокированные попытки BT (24 ч)",
+          "description": "Соединения, срезанные правилом маршрутизации xray на входной ноде — до выхода они не доходят.",
           "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -63,7 +63,7 @@ data:
         {
           "id": 2,
           "type": "timeseries",
-          "title": "Attempts per hour, by client",
+          "title": "Попытки по часам, в разрезе клиентов",
           "gridPos": { "h": 6, "w": 18, "x": 6, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -82,7 +82,7 @@ data:
         {
           "id": 3,
           "type": "table",
-          "title": "Totals by client / source IP (all time)",
+          "title": "Итоги по клиентам и адресам (за всё время)",
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -95,15 +95,15 @@ data:
             }
           ],
           "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Client", "ip": "Source IP", "Value": "Blocked" } } },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Blocked", "desc": true } ] } }
+            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Клиент", "ip": "IP-адрес источника", "Value": "Заблокировано" } } },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Заблокировано", "desc": true } ] } }
           ],
           "fieldConfig": { "defaults": {}, "overrides": [] }
         },
         {
           "id": 4,
           "type": "timeseries",
-          "title": "When attempts happened (5m buckets)",
+          "title": "Когда именно были попытки (шаг 5 мин)",
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
@@ -123,7 +123,7 @@ data:
           "id": 5,
           "type": "table",
           "title": "Забаненные IP (автобан)",
-          "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left, the exact moment the ban lifts and the network owner of that address (Team Cymru whois + reverse DNS). Click an IP for a full external lookup. Rows disappear when the ban expires.",
+          "description": "Кого сейчас отрезал сторож автобана: адрес источника, профиль клиента за ним, остаток времени, точный момент снятия и владелец адреса (Team Cymru whois + reverse DNS). Клик по IP — полный внешний whois. Строки исчезают, когда бан истекает.",
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
