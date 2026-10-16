@@ -1,0 +1,65 @@
+# Канбан-доска для домашних дел: https://github.com/gera-corp/to-do-board
+#
+# Чарт публикуется CI в GHCR только после того, как собран и проверен образ той же
+# версии, поэтому диапазон 0.* безопасен: новая версия появляется здесь целиком.
+# Выпуск: git tag v0.X.Y в репозитории доски — дальше ArgoCD обновит сам.
+#
+# Секреты: токен Telegram-бота подставляет bank-vaults webhook прямо в переменную
+# окружения процесса (в Kubernetes Secret он не попадает). Положить его в Vault:
+#
+#   vault kv put secret/to-do-board TELEGRAM_BOT_TOKEN=...
+#
+# База — SQLite на томе nfs-csi. PVC помечен Delete=false: ни prune, ни удаление
+# этого Application его не удалят.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: to-do-board
+spec:
+  destination:
+    name: in-cluster
+    namespace: to-do-board
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+  source:
+    repoURL: ghcr.io/gera-corp/charts
+    chart: to-do-board
+    targetRevision: 0.*
+    helm:
+      # Совпадает с прежним helm-релизом: те же имена ресурсов, тот же PVC.
+      releaseName: to-do-board
+      valuesObject:
+        config:
+          timezone: Europe/Berlin
+          telegramDigestHour: 9
+          # WAL на NFS не работает.
+          sqliteJournalMode: DELETE
+
+        vault:
+          enabled: true
+          secretPath: secret/data/to-do-board
+          env:
+            TELEGRAM_BOT_TOKEN: TELEGRAM_BOT_TOKEN
+          # Адрес Vault, путь аутентификации (talos) и роль (default) — из настроек webhook.
+
+        # Публичный домен: *.geracorp.org указывает на geracorp.ddns.net, сертификат
+        # выпускается через DNS-01 Cloudflare.
+        ingress:
+          enabled: true
+          className: traefik
+          host: todo.geracorp.org
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-cloud-production
+
+        persistence:
+          storageClass: nfs-csi
+          size: 1Gi
+
+        networkPolicy:
+          ingressNamespaces:
+            - traefik
