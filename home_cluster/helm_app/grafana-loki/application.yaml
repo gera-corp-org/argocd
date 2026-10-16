@@ -24,6 +24,12 @@
 # перезапуска при смене конфига с внешним ConfigMap всё равно не работает, так
 # что не теряется ничего, чего бы уже не потеряли.
 #
+# ── fsGroupChangePolicy: OnRootMismatch ─────────────────────────────────────
+# У трёх компонентов с PVC (ingester, querier, compactor) чарт ставит Always,
+# и kubelet на каждом старте делает рекурсивный chown всего тома. На NFS с
+# чанками ingester поднимался 6,5 минуты (16.10.2026, после апгрейда Talos).
+# OnRootMismatch пропускает chown, если владелец корня тома уже совпадает.
+#
 # ── Класс хранилища ─────────────────────────────────────────────────────────
 # nfs-csi, хотя в values релиза оставался удалённый openmediavault-nfs-client.
 # volumeName у PVC игнорируется по тем же причинам, что у minio: чарт его не
@@ -93,6 +99,8 @@ spec:
         compactor:
           networkPolicy:
             enabled: false
+          podSecurityContext:
+            fsGroupChangePolicy: OnRootMismatch
         distributor:
           networkPolicy:
             enabled: false
@@ -126,6 +134,8 @@ spec:
         ingester:
           networkPolicy:
             enabled: false
+          podSecurityContext:
+            fsGroupChangePolicy: OnRootMismatch
         loki:
           existingConfigmap: loki-grafana-loki
           image:
@@ -148,6 +158,8 @@ spec:
         querier:
           networkPolicy:
             enabled: false
+          podSecurityContext:
+            fsGroupChangePolicy: OnRootMismatch
           resourcesPreset: medium
         queryFrontend:
           networkPolicy:
