@@ -30,6 +30,14 @@
 # чанками ingester поднимался 6,5 минуты (16.10.2026, после апгрейда Talos).
 # OnRootMismatch пропускает chown, если владелец корня тома уже совпадает.
 #
+# ── Стратегия compactor: сначала погасить старый под ────────────────────────
+# Compactor держит flock на delete_requests boltdb в своём томе. Дефолтный
+# RollingUpdate с одной репликой поднимает новый под раньше, чем гасит старый,
+# и новый падает с "failed to init delete store: timeout" — rollout виснет.
+# Recreate поставить нельзя: strategy.rollingUpdate остался за менеджером
+# terraform-provider-helm, ArgoCD его не уберёт, а apiserver запрещает
+# rollingUpdate при Recreate. maxSurge 0 / maxUnavailable 1 даёт то же самое.
+#
 # ── Класс хранилища ─────────────────────────────────────────────────────────
 # nfs-csi, хотя в values релиза оставался удалённый openmediavault-nfs-client.
 # volumeName у PVC игнорируется по тем же причинам, что у minio: чарт его не
@@ -101,6 +109,11 @@ spec:
             enabled: false
           podSecurityContext:
             fsGroupChangePolicy: OnRootMismatch
+          updateStrategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 0
+              maxUnavailable: 1
         distributor:
           networkPolicy:
             enabled: false
