@@ -34,6 +34,7 @@ spec:
         severity: warning
       annotations:
         summary: Disk temperature {{ $value }}°C on {{ $labels.node }} / {{ $labels.device }}
+        description: 'Current temperature {{ $value }}°C is above 60°C on {{ $labels.device }} ({{ $labels.node }}, {{ $labels.instance }}). Check airflow, fan speed and disk load.'
     - alert: SmartDiskTemperatureCritical
       expr: smartctl_device_temperature{temperature_type="current"} > 70
       for: 5m
@@ -41,6 +42,7 @@ spec:
         severity: critical
       annotations:
         summary: Disk temperature {{ $value }}°C on {{ $labels.node }} / {{ $labels.device }}
+        description: 'Current temperature {{ $value }}°C is above 70°C on {{ $labels.device }} ({{ $labels.node }}, {{ $labels.instance }}) — thermal throttling and data-loss risk. Power the node down or fix cooling now.'
     - alert: SmartNvmeMediaErrors
       expr: increase(smartctl_device_media_errors[1h]) > 0
       for: 5m
@@ -78,6 +80,7 @@ spec:
         severity: warning
       annotations:
         summary: '{{ $labels.attribute_name }} on {{ $labels.node }} / {{ $labels.device }}'
+        description: '{{ $labels.attribute_name }} raw value = {{ $value }} on {{ $labels.device }} ({{ $labels.node }}, {{ $labels.instance }}) — sectors the drive cannot read reliably and had to remap. Back up and plan replacement.'
     - alert: SmartSsdWearHigh
       expr: smartctl_device_percentage_used > 90
       for: 1h
@@ -85,6 +88,7 @@ spec:
         severity: warning
       annotations:
         summary: SSD wear {{ $value }}% on {{ $labels.node }} / {{ $labels.device }}
+        description: 'The drive reports {{ $value }}% of its rated write endurance used ({{ $labels.device }} on {{ $labels.node }}, {{ $labels.instance }}). Above 90% the flash is near end of life — plan replacement. Cross-check smartctl -A: media errors and critical warnings stay 0 while spare blocks are intact.'
     - alert: SmartDiskSpareLow
       expr: (smartctl_device_available_spare - smartctl_device_available_spare_threshold) < 10
       for: 15m

@@ -111,12 +111,12 @@ spec:
               {{ define "telegram.default.message" }}
               {{ range .Alerts }}
               {{ if eq .Status "firing" }}❌ <b>Status:</b> Firing{{ else if eq .Status "resolved" }}✅ <b>Status:</b> Resolved{{ end }}
-              🖥️ <b>Host:</b> {{ .Labels.instance }}
+              🖥️ <b>Host:</b> {{ if .Labels.node }}{{ .Labels.node }}{{ else }}{{ .Labels.instance }}{{ end }}
               ❗️ <b>Alert</b><code> {{ .Annotations.summary }}</code>
               {{ if eq .Labels.severity "critical" }}💥 <b>Severity:</b> {{ .Labels.severity }}
               {{ else if eq .Labels.severity "warning" }}⚠️ <b>Severity:</b> {{ .Labels.severity }}
               {{ else }}❗️ <b>Severity:</b> {{ .Labels.severity }}{{ end }}
-              🗒️ <b>Description:</b><pre><code>{{ .Annotations.description }}</code></pre>
+              {{ if .Annotations.description }}🗒️ <b>Description:</b><pre><code>{{ .Annotations.description }}</code></pre>{{ end }}
               {{ end }}
               {{ end }}
         prometheusOperator:
