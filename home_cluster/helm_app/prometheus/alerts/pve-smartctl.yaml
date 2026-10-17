@@ -1,0 +1,103 @@
+# SMART-мониторинг дисков нод Proxmox: smartctl_exporter на .2/.3/.4, порт 9633.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pve-smartctl
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+spec:
+  groups:
+  - name: pve-smartctl
+    rules:
+    - alert: SmartDiskUnhealthy
+      expr: smartctl_device_smart_status != 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: SMART FAILED on {{ $labels.node }} / {{ $labels.device }}
+        description: smartctl reports failing health status for {{ $labels.device }} on {{ $labels.node }} ({{ $labels.instance }}). Replace the disk.
+    - alert: SmartDiskCriticalWarning
+      expr: smartctl_device_critical_warning > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: NVMe critical warning on {{ $labels.node }} / {{ $labels.device }}
+        description: smartctl_device_critical_warning = {{ $value }} on {{ $labels.device }} ({{ $labels.node }}).
+    - alert: SmartDiskTemperatureHigh
+      expr: smartctl_device_temperature{temperature_type="current"} > 60
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: Disk temperature {{ $value }}°C on {{ $labels.node }} / {{ $labels.device }}
+    - alert: SmartDiskTemperatureCritical
+      expr: smartctl_device_temperature{temperature_type="current"} > 70
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: Disk temperature {{ $value }}°C on {{ $labels.node }} / {{ $labels.device }}
+    - alert: SmartNvmeMediaErrors
+      expr: increase(smartctl_device_media_errors[1h]) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: New NVMe media errors on {{ $labels.node }} / {{ $labels.device }}
+        description: '{{ $value }} new media errors in the last hour on {{ $labels.device }} ({{ $labels.node }}).'
+    - alert: SmartDiskReallocatedSectors
+      expr: 'increase(smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"}[24h]) > 0
+
+        and
+
+        count_over_time(smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"}[24h]) >= 1200
+
+        '
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: New reallocated sectors on {{ $labels.node }} / {{ $labels.device }}
+        description: +{{ $value }} reallocated sectors in 24h on {{ $labels.device }} ({{ $labels.node }}) — disk is degrading.
+    - alert: SmartDiskReallocatedSectorsHigh
+      expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct",attribute_value_type="raw"} > 20
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: '{{ $value }} reallocated sectors on {{ $labels.node }} / {{ $labels.device }}'
+        description: Accumulated reallocated sector count on {{ $labels.device }} ({{ $labels.node }}) — plan replacement.
+    - alert: SmartDiskPendingSectors
+      expr: smartctl_device_attribute{attribute_name=~"Current_Pending_Sector|Reported_Uncorrect",attribute_value_type="raw"} > 0
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: '{{ $labels.attribute_name }} on {{ $labels.node }} / {{ $labels.device }}'
+    - alert: SmartSsdWearHigh
+      expr: smartctl_device_percentage_used > 90
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: SSD wear {{ $value }}% on {{ $labels.node }} / {{ $labels.device }}
+    - alert: SmartDiskSpareLow
+      expr: (smartctl_device_available_spare - smartctl_device_available_spare_threshold) < 10
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: NVMe spare blocks low on {{ $labels.node }} / {{ $labels.device }}
+        description: available_spare is within 10% of threshold on {{ $labels.device }} ({{ $labels.node }}).
+    - alert: SmartExporterDown
+      expr: up{job="pve-smartctl"} == 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: smartctl_exporter unreachable on {{ $labels.node }}
+        description: Prometheus cannot scrape {{ $labels.instance }} — disk health for that node is unmonitored.
