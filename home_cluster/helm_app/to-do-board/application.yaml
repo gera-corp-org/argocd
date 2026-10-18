@@ -4,10 +4,10 @@
 # версии, поэтому диапазон 0.* безопасен: новая версия появляется здесь целиком.
 # Выпуск: git tag v0.X.Y в репозитории доски — дальше ArgoCD обновит сам.
 #
-# Секреты: токен Telegram-бота подставляет bank-vaults webhook прямо в переменную
-# окружения процесса (в Kubernetes Secret он не попадает). Положить его в Vault:
+# Секреты: токен Telegram-бота и client secret Google подставляет bank-vaults webhook
+# прямо в переменные окружения процесса (в Kubernetes Secret они не попадают):
 #
-#   vault kv put secret/to-do-board TELEGRAM_BOT_TOKEN=...
+#   vault kv put secret/to-do-board TELEGRAM_BOT_TOKEN=... GOOGLE_CLIENT_SECRET=...
 #
 # База — SQLite на томе nfs-csi. PVC помечен Delete=false: ни prune, ни удаление
 # этого Application его не удалят.
@@ -39,12 +39,20 @@ spec:
           telegramDigestHour: 9
           # WAL на NFS не работает.
           sqliteJournalMode: DELETE
+          # Вход через Google: OAuth-клиент в проекте SSO-HOME-LAB (режим Testing,
+          # войти могут только Test users). Secret — в Vault, см. vault.env.
+          googleClientId: 553356349740-6kfvj7sfhl885pvjt1c0r5vooscrva4p.apps.googleusercontent.com
+          # Выключить, когда Google привяжут все члены семьи.
+          passwordLogin: true
 
         vault:
           enabled: true
           secretPath: secret/data/to-do-board
           env:
             TELEGRAM_BOT_TOKEN: TELEGRAM_BOT_TOKEN
+            # Ключ должен быть в Vault до синхронизации, иначе под не стартует:
+            #   vault kv patch secret/to-do-board GOOGLE_CLIENT_SECRET=...
+            GOOGLE_CLIENT_SECRET: GOOGLE_CLIENT_SECRET
           # Адрес Vault, путь аутентификации (talos) и роль (default) — из настроек webhook.
 
         # Публичный домен: *.geracorp.org указывает на geracorp.ddns.net, сертификат
