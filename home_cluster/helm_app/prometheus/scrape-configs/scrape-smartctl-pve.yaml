@@ -26,6 +26,8 @@ subsets:
   - ip: 192.168.1.2
   - ip: 192.168.1.3
   - ip: 192.168.1.4
+  # рабочий ПК (Windows 11); доступен из кластера только через туннельный адрес
+  - ip: 10.0.0.11
   ports:
   - name: metrics
     port: 9633
@@ -61,3 +63,8 @@ spec:
       regex: 192\.168\.1\.4:.*
       targetLabel: node
       replacement: proxmox-03
+    - sourceLabels:
+      - __address__
+      regex: 10\.0\.0\.11:.*
+      targetLabel: node
+      replacement: gera-pc
