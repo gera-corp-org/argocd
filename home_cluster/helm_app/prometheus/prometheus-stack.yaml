@@ -37,7 +37,7 @@ spec:
         defaultRules:
           create: true
           rules:
-            alertmanager: false
+            alertmanager: true
             etcd: true
             configReloaders: true
             general: true
@@ -46,7 +46,7 @@ spec:
             kubeApiserverBurnrate: true
             kubeApiserverHistogram: true
             kubeApiserverSlos: true
-            kubeControllerManager: false
+            kubeControllerManager: true
             kubelet: true
             kubeProxy: true
             kubePrometheusGeneral: true
@@ -55,10 +55,10 @@ spec:
             kubernetesResources: true
             kubernetesStorage: true
             kubernetesSystem: true
-            kubeSchedulerAlerting: false
-            kubeSchedulerRecording: false
+            kubeSchedulerAlerting: true
+            kubeSchedulerRecording: true
             kubeStateMetrics: true
-            network: false
+            network: true
             node: true
             nodeExporterAlerting: true
             nodeExporterRecording: true
