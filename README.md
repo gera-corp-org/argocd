@@ -117,6 +117,8 @@ Applications that own a claim therefore ignore that field explicitly; see
 - [Statedash](https://github.com/gera-corp-org/statedash) — network dashboard fed
   by OPNsense, plus the public demonstration at `demo.statedash.geracorp.org`
   running the same chart in mock mode
+- [curse-bot](https://github.com/gera-corp-org/curse-bot) — new World of Warcraft
+  addons from CurseForge posted to a Telegram channel, own OCI chart `0.*`
 - [Nod32 update mirror](https://github.com/gera-corp/nod32update-mirror)
 - [release-bot](https://github.com/janisv/release-bot) — GitHub releases to Telegram
 - dockerhub-bot — watches Docker Hub tags and reports to Telegram
