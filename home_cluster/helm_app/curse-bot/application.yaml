@@ -43,6 +43,10 @@ spec:
           # пусто — обо всех версиях; например "forever" или "retail,classic"
           flavors: ""
           pollInterval: 600
+          # Кому бот отвечает на команды в личке (/status, /latest, /pending, /flavors).
+          # Нужен чарт 0.3.0+; на 0.2.0 значение просто игнорируется.
+          adminIds:
+            - 282307402  # @Geracorp
 
         vault:
           enabled: true
