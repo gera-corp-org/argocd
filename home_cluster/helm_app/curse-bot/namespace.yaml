@@ -1,0 +1,10 @@
+# Namespace объявлен явно, чтобы вместе с ним жили метки Pod Security:
+# под бота и init-контейнер vault-env проходят профиль restricted.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: curse-bot
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted

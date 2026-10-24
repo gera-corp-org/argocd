@@ -1,0 +1,54 @@
+# Новые аддоны World of Warcraft с CurseForge в Telegram-канал:
+# https://github.com/gera-corp-org/curse-bot
+#
+# Чарт публикуется CI в GHCR только после того, как собран образ той же версии,
+# поэтому диапазон 0.* безопасен: новая версия появляется здесь целиком.
+# Выпуск: git tag v0.X.Y в репозитории бота — дальше ArgoCD обновит сам.
+#
+# Секреты подставляет bank-vaults webhook прямо в переменные окружения процесса
+# (в Kubernetes Secret они не попадают). Положить до синхронизации, иначе под
+# не стартует. Ключ CurseForge содержит $ — значения в одинарных кавычках:
+#
+#   vault kv put secret/curse-bot \
+#     CURSEFORGE_API_KEY='$2a$10$...' TELEGRAM_BOT_TOKEN='...' TELEGRAM_CHAT_ID='...'
+#
+# Бот должен работать в одном экземпляре: если он запущен где-то ещё (docker compose),
+# каждый аддон придёт в канал дважды.
+#
+# Состояние (курсор по id проектов и список ожидающих модерации) — SQLite на томе
+# nfs-csi. PVC помечен Delete=false: ни prune, ни удаление этого Application его
+# не удалят.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: curse-bot
+spec:
+  destination:
+    name: in-cluster
+    namespace: curse-bot
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+  source:
+    repoURL: ghcr.io/gera-corp-org/charts
+    chart: curse-bot
+    targetRevision: 0.*
+    helm:
+      valuesObject:
+        config:
+          # пусто — обо всех версиях; например "forever" или "retail,classic"
+          flavors: ""
+          pollInterval: 600
+
+        vault:
+          enabled: true
+          secretPath: secret/data/curse-bot
+          # Адрес Vault, путь аутентификации и роль — из настроек webhook.
+
+        persistence:
+          storageClass: nfs-csi
+          size: 64Mi
