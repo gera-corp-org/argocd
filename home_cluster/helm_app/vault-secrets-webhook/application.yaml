@@ -26,10 +26,29 @@
 # releaseName: bank-vault — имя релиза из Terraform, оно вшито в имена всех
 # объектов. Приложение при этом названо по-человечески.
 #
-# failurePolicy у всех четырёх мутаций — Ignore (дефолт чарта). Если вебхук
-# недоступен, кластер не встаёт, но поды стартуют с буквальными строками
-# vault:secret/data/... вместо секретов, и никакой ошибки при этом нет.
-# Поэтому две реплики, PDB и priorityClassName.
+# ── failurePolicy пода: Fail, но только для подов со ссылками на Vault ──────
+# С Ignore под, созданный в момент недоступности вебхука, стартует с
+# буквальными vault:secret/data/... вместо секретов и сам из этого не выходит.
+# 26.10.2026 при drain воркеров под апгрейд Talos так сломался telebot: его
+# создали в ту же секунду, когда переезжала реплика вебхука.
+#
+# Fail для всех подов нельзя: пока вебхук лежит, не создался бы ни один под
+# в кластере. Поэтому pods.matchConditions пропускает к вебхуку только поды
+# с vault: в env или с аннотациями vault.security.banzaicloud.io/*. Остальные
+# поды вебхук не вызывают вовсе. Поды со ссылками при недоступном вебхуке
+# получают отказ, и контроллер пересоздаёт их, пока вебхук не вернётся.
+#
+# ВАЖНО: под, который НЕ попадает под условие, вебхук не мутирует никогда,
+# даже работающий. Условие проверено 26.10.2026 на живых подах: все 16
+# мутированных подов под него попадают, лишних нет. Не покрыт случай, когда
+# vault:-ссылки приходят в под через envFrom/secretKeyRef/configMapKeyRef из
+# ConfigMap/Secret — сейчас таких подов нет. Заведёшь такой — расширь условие.
+#
+# Свои поды вебхук помечает security.banzaicloud.io/mutate: skip, а
+# vault-infra исключён namespaceSelector'ом — самоблокировки нет.
+#
+# Остальные три мутации (secrets, configmaps, objects) остаются на Ignore.
+# Две реплики разнесены по нодам, плюс PDB и priorityClassName.
 #
 # ServiceAccount vault с правами token-review, его токен и PriorityClass лежат
 # в rbac.yaml рядом: они не часть чарта, их применяет home-lab.
@@ -96,9 +115,29 @@ spec:
         podDisruptionBudget:
           enabled: true
           minAvailable: 1
+        podsFailurePolicy: Fail
+        pods:
+          matchConditions:
+          - name: has-vault-refs
+            expression: >-
+              (has(object.metadata.annotations) &&
+              object.metadata.annotations.exists(k, k.startsWith('vault.security.banzaicloud.io/')))
+              || object.spec.containers.exists(c, has(c.env) &&
+              c.env.exists(e, has(e.value) && e.value.contains('vault:')))
+              || (has(object.spec.initContainers) &&
+              object.spec.initContainers.exists(c, has(c.env) &&
+              c.env.exists(e, has(e.value) && e.value.contains('vault:'))))
         priorityClassName: vault-webhook-critical
         rbac:
           authDelegatorRole:
             enabled: true
         replicaCount: 2
         secretsMutation: true
+        topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault-secrets-webhook
+              app.kubernetes.io/instance: bank-vault
