@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: domain-exporter
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: domain-exporter
+  template:
+    metadata:
+      labels:
+        app: domain-exporter
+    spec:
+      containers:
+        # gTLD: .cc .cash .win .site .top .online .org .work .com — RDAP с фолбэком на WHOIS
+        - name: domain-exporter
+          image: caarlos0/domain_exporter:v1.25.0
+          args:
+            - --config=/config/domains.yaml
+            - --bind=:9222
+            - --cache=6h
+            - --timeout=15s
+          ports:
+            - name: metrics
+              containerPort: 9222
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+        # .ru/.su — TCI WHOIS, парсер caarlos0 на этом формате ломается
+        - name: ru-whois
+          image: python:3.12-alpine
+          command: ["python3", "/scripts/ru_whois.py"]
+          ports:
+            - name: ru-metrics
+              containerPort: 9223
+          env:
+            - name: DOMAINS
+              value: "geracorp.ru,biostal.ru"
+            - name: WHOIS_HOST
+              value: "whois.tcinet.ru"
+            - name: REFRESH_SECONDS
+              value: "21600"
+            - name: PORT
+              value: "9223"
+          resources:
+            requests:
+              cpu: 5m
+              memory: 24Mi
+            limits:
+              cpu: 100m
+              memory: 96Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: ru-metrics
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            failureThreshold: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: ru-scripts
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: domain-exporter-config
+        - name: ru-scripts
+          configMap:
+            name: domain-exporter-ru
+            defaultMode: 0555

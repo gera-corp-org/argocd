@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: domain-exporter
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+spec:
+  clusterIP: None
+  selector:
+    app: domain-exporter
+  ports:
+    - name: metrics
+      port: 9222
+      targetPort: metrics
+    - name: ru-metrics
+      port: 9223
+      targetPort: ru-metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: domain-exporter
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+spec:
+  selector:
+    matchLabels:
+      app: domain-exporter
+  namespaceSelector:
+    matchNames:
+      - monitoring
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30m
+      scrapeTimeout: 120s
+    - port: ru-metrics
+      path: /metrics
+      interval: 30m
+      scrapeTimeout: 60s

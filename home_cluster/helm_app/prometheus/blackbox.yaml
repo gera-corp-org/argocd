@@ -70,6 +70,8 @@ spec:
             - name: vault-162
               url: https://192.168.1.162:8200/v1/sys/health
               module: vault_health
+            # TLS-сертификатов. Срок регистрации доменов — отдельный
+            # domain-exporter (home_cluster/domain-exporter/).
             # - name: telegram-api
             #   url: https://api.telegram.org/bot${vault:secret/data/alertmanager#telegram_token}/getMe
             #   hostname: api.telegram.org
