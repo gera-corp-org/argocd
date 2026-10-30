@@ -31,12 +31,15 @@ spec:
   namespaceSelector:
     matchNames:
       - monitoring
+  # Интервал < default lookback-delta Prometheus (5m), иначе инстант-запросы
+  # между скрейпами не видят метрику и алерты флапают. Реальные WHOIS-запросы
+  # редки: caarlos0 кэширует на 6h, сайдкар обновляется раз в 6h.
   endpoints:
     - port: metrics
       path: /metrics
-      interval: 30m
-      scrapeTimeout: 120s
+      interval: 2m
+      scrapeTimeout: 60s
     - port: ru-metrics
       path: /metrics
-      interval: 30m
+      interval: 2m
       scrapeTimeout: 60s
