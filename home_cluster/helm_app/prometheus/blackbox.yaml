@@ -70,6 +70,44 @@ spec:
             - name: vault-162
               url: https://192.168.1.162:8200/v1/sys/health
               module: vault_health
+            # Продлеваемые домены (агентская линейка + свои) — контроль срока
+            # TLS-сертификатов. Срок регистрации доменов — отдельный
+            # domain-exporter (home_cluster/domain-exporter/).
+            - name: adm-cash
+              url: https://adm.cash
+              hostname: adm.cash
+            - name: 1win-win
+              url: https://1win.win
+              hostname: 1win.win
+            - name: agentpanel-site
+              url: https://agentpanel.site
+              hostname: agentpanel.site
+            - name: agentpanel-top
+              url: https://agentpanel.top
+              hostname: agentpanel.top
+            - name: 1wagent-online
+              url: https://1wagent.online
+              hostname: 1wagent.online
+            - name: agentcash-site
+              url: https://agentcash.site
+              hostname: agentcash.site
+            - name: 1win-cash
+              url: https://1win.cash
+              hostname: 1win.cash
+            - name: 1-w-cash
+              url: https://1-w.cash
+              hostname: 1-w.cash
+            - name: 1winagent-cash
+              url: https://1winagent.cash
+              hostname: 1winagent.cash
+            # cash-service.cc: зона делегирована на Cloudflare, но A/AAAA нет —
+            # ни HTTP, ни TLS на домене не подняты. Мониторится только срок
+            # регистрации (domain-exporter). Раскомментировать после появления
+            # веб-сервиса на домене, иначе probe_ssl_earliest_cert_expiry будет
+            # вечно отсутствовать и алерт по сертификату станет шумом.
+            # - name: cash-service-cc
+            #   url: https://cash-service.cc
+            #   hostname: cash-service.cc
             # - name: telegram-api
             #   url: https://api.telegram.org/bot${vault:secret/data/alertmanager#telegram_token}/getMe
             #   hostname: api.telegram.org

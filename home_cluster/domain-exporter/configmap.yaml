@@ -1,0 +1,153 @@
+# domain_exporter (caarlos0) — срок регистрации доменов через RDAP/WHOIS.
+#
+# Модуль .ru/.su (`ru-whois`) — обходной путь: WHOIS TCI отдаёт строку
+# `state: REGISTERED, DELEGATED, VERIFIED` раньше, чем `paid-till:`, а парсер
+# caarlos0 берёт первое совпадение по подстроке "registered" и падает на
+# "could not parse date: \", DELEGATED, VERIFIED\"". Поэтому .ru считает
+# отдельный сайдкар.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: domain-exporter-config
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+data:
+  domains.yaml: |
+    domains:
+      - cash-service.cc
+      - adm.cash
+      - "1win.win"
+      - agentpanel.site
+      - agentpanel.top
+      - 1wagent.online
+      - agentcash.site
+      - "1win.cash"
+      - "1-w.cash"
+      - "1winagent.cash"
+      - geracorp.org
+      - geracorp.work
+      - biostal-factory.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: domain-exporter-ru
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+data:
+  ru_whois.py: |
+    #!/usr/bin/env python3
+    """Minimal Prometheus exporter for .ru/.su domain expiry (TCI WHOIS, port 43).
+
+    Emits the same metric names as caarlos0/domain_exporter so a single
+    PrometheusRule covers both sources:
+      domain_expiry_days{domain="..."}    days until paid-till
+      domain_expiry_timestamp_seconds{domain="..."}
+      domain_probe_success{domain="..."}  1 = whois parsed, 0 = failed
+    """
+    import os
+    import re
+    import socket
+    import threading
+    import time
+    from datetime import datetime, timezone
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    DOMAINS = [d.strip() for d in os.environ.get("DOMAINS", "").split(",") if d.strip()]
+    WHOIS_HOST = os.environ.get("WHOIS_HOST", "whois.tcinet.ru")
+    WHOIS_PORT = int(os.environ.get("WHOIS_PORT", "43"))
+    REFRESH = int(os.environ.get("REFRESH_SECONDS", "21600"))
+    LISTEN_PORT = int(os.environ.get("PORT", "9223"))
+
+    PAID_RE = re.compile(r"paid-till:\s*(\S+)", re.I)
+    FREE_RE = re.compile(r"free-date:\s*(\S+)", re.I)
+    state = {}
+    lock = threading.Lock()
+
+
+    def whois(domain, timeout=25):
+        with socket.create_connection((WHOIS_HOST, WHOIS_PORT), timeout=timeout) as s:
+            s.sendall((domain + "\r\n").encode())
+            buf = []
+            while True:
+                try:
+                    chunk = s.recv(4096)
+                except socket.timeout:
+                    break
+                if not chunk:
+                    break
+                buf.append(chunk)
+        return b"".join(buf).decode("utf-8", "replace")
+
+
+    def parse_date(raw):
+        for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+        raise ValueError("unparsable date %r" % raw)
+
+
+    def refresh_once():
+        for domain in DOMAINS:
+            try:
+                body = whois(domain)
+                m = PAID_RE.search(body) or FREE_RE.search(body)
+                if not m:
+                    raise ValueError("no paid-till/free-date in whois response")
+                exp = parse_date(m.group(1))
+                days = (exp - datetime.now(timezone.utc)).total_seconds() / 86400.0
+                with lock:
+                    state[domain] = (days, 1, exp.timestamp())
+                print("ok %s -> %s (%.1f days)" % (domain, exp.isoformat(), days), flush=True)
+            except Exception as exc:
+                with lock:
+                    state[domain] = (-1.0, 0, 0.0)
+                print("error %s: %s" % (domain, exc), flush=True)
+
+
+    def refresher():
+        while True:
+            refresh_once()
+            time.sleep(REFRESH)
+
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if not self.path.startswith("/metrics"):
+                self.send_response(404)
+                self.end_headers()
+                return
+            with lock:
+                snapshot = dict(state)
+            out = []
+            out.append("# HELP domain_expiry_days time in days until the domain expires")
+            out.append("# TYPE domain_expiry_days gauge")
+            for d, (days, _ok, _ts) in sorted(snapshot.items()):
+                out.append('domain_expiry_days{domain="%s"} %s' % (d, round(days, 2)))
+            out.append("# HELP domain_expiry_timestamp_seconds expiry time as unix timestamp")
+            out.append("# TYPE domain_expiry_timestamp_seconds gauge")
+            for d, (_days, _ok, ts) in sorted(snapshot.items()):
+                out.append('domain_expiry_timestamp_seconds{domain="%s"} %s' % (d, ts))
+            out.append("# HELP domain_probe_success whether the whois lookup succeeded")
+            out.append("# TYPE domain_probe_success gauge")
+            for d, (_days, ok, _ts) in sorted(snapshot.items()):
+                out.append('domain_probe_success{domain="%s"} %d' % (d, ok))
+            payload = ("\n".join(out) + "\n").encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; version=0.0.4")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, *_args):
+            pass
+
+
+    if __name__ == "__main__":
+        threading.Thread(target=refresher, daemon=True).start()
+        print("serving on :%d for %s" % (LISTEN_PORT, ",".join(DOMAINS)), flush=True)
+        HTTPServer(("", LISTEN_PORT), Handler).serve_forever()

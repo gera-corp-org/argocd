@@ -1,0 +1,71 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: domain-exporter
+  namespace: monitoring
+  labels:
+    app: domain-exporter
+    app.kubernetes.io/instance: kube-prometheus-stack
+spec:
+  groups:
+    - name: domain-expiry
+      rules:
+        # Основной алерт: две недели до истечения регистрации домена.
+        - alert: DomainExpiryIn14Days
+          annotations:
+            summary: >-
+              Домен {{ $labels.domain }} истекает через {{ $value | printf "%.0f" }} дн.
+            description: >-
+              Срок регистрации {{ $labels.domain }} истекает менее чем через 14 дней
+              ({{ $value | printf "%.1f" }} дн.). Продлить у регистратора или проверить,
+              что автопродление настроено и оплата прошла.
+          expr: |
+            domain_expiry_days > 0 and domain_expiry_days <= 14
+          for: 10m
+          labels:
+            severity: warning
+            service: domains
+
+        - alert: DomainExpiryIn3Days
+          annotations:
+            summary: >-
+              КРИТИЧНО: домен {{ $labels.domain }} истекает через {{ $value | printf "%.0f" }} дн.
+            description: >-
+              До истечения {{ $labels.domain }} осталось {{ $value | printf "%.1f" }} дн.
+              Продлевать немедленно — после истечения домен уходит в карантин регистратора.
+          expr: |
+            domain_expiry_days > 0 and domain_expiry_days <= 3
+          for: 10m
+          labels:
+            severity: critical
+            service: domains
+
+        # Метрика есть, но WHOIS/RDAP не разобрался: домен не мониторится молча.
+        - alert: DomainExpiryProbeFailed
+          annotations:
+            summary: "Не удаётся получить срок регистрации {{ $labels.domain }}"
+            description: >-
+              domain_probe_success = 0 для {{ $labels.domain }}: WHOIS/RDAP вернул
+              неразбираемый ответ или запрос не прошёл. Срок истечения домена
+              сейчас неизвестен — проверить вручную.
+          expr: |
+            domain_probe_success == 0
+          for: 2h
+          labels:
+            severity: warning
+            service: domains
+
+        # Экспортёр целиком не отдаёт данные (под упал / нет egress на :43).
+        - alert: DomainExporterDown
+          annotations:
+            summary: "domain-exporter не отдаёт метрики"
+            description: >-
+              Ни один домен из списка не экспортируется: экспортёр недоступен или
+              Prometheus не может его скрейпить. Все алерты по срокам доменов
+              сейчас не работают.
+          expr: |
+            absent(domain_expiry_days)
+          for: 2h
+          labels:
+            severity: warning
+            service: domains
