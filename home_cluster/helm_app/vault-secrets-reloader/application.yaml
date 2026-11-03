@@ -32,7 +32,7 @@ spec:
   source:
     repoURL: ghcr.io/bank-vaults/helm-charts
     chart: vault-secrets-reloader
-    targetRevision: 0.5.0
+    targetRevision: 0.*
     helm:
       valuesObject:
         env:
