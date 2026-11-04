@@ -42,7 +42,7 @@ spec:
   source:
     repoURL: https://metallb.github.io/metallb
     chart: metallb
-    targetRevision: 0.16.1
+    targetRevision: 0.*
     helm:
       valuesObject:
         # FRR нужен только для BGP. Здесь анонс идёт через L2 (ARP), так что
