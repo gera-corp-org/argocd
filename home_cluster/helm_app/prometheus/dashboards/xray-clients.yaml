@@ -204,10 +204,68 @@ data:
           }
         },
         {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Download per client (Mbit/s)",
+          "description": "Per-client download rate, from the panel counters sampled every minute. Peaks per user.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum by (email) (rate(xray_client_down_total_bytes{instance=\"homs.geracorp.org:8844\"}[5m]))*8/1e6",
+              "legendFormat": "{{email}}",
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Mbits",
+              "min": 0,
+              "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": false }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"], "sortBy": "Max", "sortDesc": true },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          }
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "Upload per client (Mbit/s)",
+          "description": "Per-client upload rate, from the panel counters sampled every minute. Peaks per user.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum by (email) (rate(xray_client_up_total_bytes{instance=\"homs.geracorp.org:8844\"}[5m]))*8/1e6",
+              "legendFormat": "{{email}}",
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Mbits",
+              "min": 0,
+              "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": false }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"], "sortBy": "Max", "sortDesc": true },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          }
+        },
+        {
           "id": 10,
           "type": "row",
           "title": "Per client",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
           "collapsed": false
         },
         {
@@ -216,7 +274,7 @@ data:
           "title": "Per client: traffic and source IP",
           "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client (empty when the panel has not recorded one).",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 17 },
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 25 },
           "targets": [
             {
               "refId": "A",
@@ -291,7 +349,7 @@ data:
           "title": "Today by client",
           "description": "Both directions, since 00:00 UTC.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 29 },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 37 },
           "targets": [
             {
               "refId": "A",
