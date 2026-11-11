@@ -168,7 +168,7 @@ data:
           "id": 11,
           "type": "table",
           "title": "Per client: traffic and source IP",
-          "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client.",
+          "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client (empty when the panel has not recorded one).",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "gridPos": { "h": 12, "w": 24, "x": 0, "y": 7 },
           "targets": [
@@ -203,13 +203,6 @@ data:
             {
               "refId": "E",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_client_ip",
-              "format": "table",
-              "instant": true
-            },
-            {
-              "refId": "F",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
               "expr": "(time() - xray_client_last_seen_timestamp) < bool 300",
               "format": "table",
               "instant": true
@@ -228,8 +221,7 @@ data:
                   "Value #B": "Uploaded today",
                   "Value #C": "Total today",
                   "Value #D": "Cumulative",
-                  "Value #E": "ip_seen",
-                  "Value #F": "Online"
+                  "Value #E": "Online"
                 }
               }
             },
@@ -242,7 +234,6 @@ data:
               { "matcher": { "id": "byName", "options": "Uploaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
               { "matcher": { "id": "byName", "options": "Total today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
               { "matcher": { "id": "byName", "options": "Cumulative" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
-              { "matcher": { "id": "byName", "options": "ip_seen" }, "properties": [ { "id": "custom.hidden", "value": true } ] },
               { "matcher": { "id": "byName", "options": "Online" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "index": 1 }, "1": { "text": "yes", "index": 0 } } } ] } ] }
             ]
           },
