@@ -158,10 +158,56 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
         },
         {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Load: download and upload (Mbit/s)",
+          "description": "Interface rate on the entry node. Download is what clients pull (node egress), upload is what they push (node ingress). The dashed line marks the 200 Mbit port.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 9, "w": 24, "x": 0, "y": 6 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"ens3\"}[2m]))*8/1e6",
+              "legendFormat": "download (clients)",
+              "format": "time_series"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"ens3\"}[2m]))*8/1e6",
+              "legendFormat": "upload (clients)",
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Mbits",
+              "min": 0,
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "thresholdsStyle": { "mode": "dashed", "lineWidth": 1 }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 200 } ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          }
+        },
+        {
           "id": 10,
           "type": "row",
           "title": "Per client",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
           "collapsed": false
         },
         {
@@ -170,7 +216,7 @@ data:
           "title": "Per client: traffic and source IP",
           "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client (empty when the panel has not recorded one).",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 7 },
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 17 },
           "targets": [
             {
               "refId": "A",
@@ -245,7 +291,7 @@ data:
           "title": "Today by client",
           "description": "Both directions, since 00:00 UTC.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 19 },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 29 },
           "targets": [
             {
               "refId": "A",
