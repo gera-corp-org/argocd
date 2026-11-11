@@ -1,0 +1,256 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-vpn-traffic
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: kube-prometheus-stack
+  annotations:
+    grafana_folder: "VPN"
+data:
+  vpn-traffic.json: |-
+    {
+      "uid": "vpn-traffic",
+      "title": "VPN — traffic budget (homs)",
+      "tags": ["vpn", "traffic", "fair-use"],
+      "timezone": "utc",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "editable": true,
+      "time": { "from": "now-24h", "to": "now" },
+      "description": "Provider counts egress per calendar day in UTC and clamps the channel to 1 Mbit/s when the limit is reached. Everything here is aligned to UTC midnight, not to a rolling 24h window.",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "gauge",
+          "title": "Egress used today (UTC day)",
+          "description": "Share of the provider's daily egress allowance already spent since 00:00 UTC. At 100% the channel is clamped to 1 Mbit/s until the next UTC midnight.",
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "100 * vpn_traffic_egress_today_bytes{node=\"homs\"} / vpn_traffic_limit_bytes{node=\"homs\"}",
+              "instant": true,
+              "legendFormat": "used"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 110,
+              "decimals": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 70 },
+                  { "color": "red", "value": 90 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": { "showThresholdLabels": false, "showThresholdMarkers": true, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Egress today / limit",
+          "description": "Bytes sent on eth0 since 00:00 UTC against the provider's limit.",
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "vpn_traffic_egress_today_bytes{node=\"homs\"}",
+              "instant": true,
+              "legendFormat": "{{value}}"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "vpn_traffic_limit_bytes{node=\"homs\"}",
+              "instant": true,
+              "legendFormat": "{{value}}"
+            }
+          ],
+          "transformations": [
+            { "id": "reduce", "options": { "reducers": ["lastNotNull"], "mode": "seriesToRows" } }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "decimals": 1 },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "colorMode": "none", "graphMode": "none", "justifyMode": "auto" }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Remaining before throttle",
+          "description": "How much egress is left today before the provider clamps the channel.",
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "clamp_min(vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_egress_today_bytes{node=\"homs\"}, 0)",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "decimals": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 10737418240 },
+                  { "color": "green", "value": 32212254720 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "ETA to throttle at current rate",
+          "description": "Remaining bytes divided by the egress rate of the last 30 minutes. Empty when traffic is idle.",
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "clamp_min((vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_egress_today_bytes{node=\"homs\"}) / sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m])), 0)",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "decimals": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 3600 },
+                  { "color": "green", "value": 14400 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" }
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Throughput, Mbit/s (dashed line = 1 Mbit throttle)",
+          "description": "Egress flat at ~1 Mbit/s with clients still connected means the provider has clamped the channel, not that users went idle.",
+          "gridPos": { "h": 9, "w": 16, "x": 0, "y": 7 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[5m]))*8/1e6",
+              "legendFormat": "egress (to clients)"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[5m]))*8/1e6",
+              "legendFormat": "ingress (from clients)"
+            },
+            {
+              "refId": "C",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "vector(1)",
+              "legendFormat": "throttle floor"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "Mbits", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 4, "showPoints": "never" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "throttle floor" }, "properties": [ { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }, { "id": "custom.fillOpacity", "value": 0 } ] }
+            ]
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Clients connected",
+          "description": "Established TCP sessions on the VPN node. Needed to tell a provider throttle apart from 'everybody is asleep'.",
+          "gridPos": { "h": 9, "w": 8, "x": 16, "y": 7 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "node_netstat_Tcp_CurrEstab{instance=\"homs.geracorp.org:8844\"}",
+              "instant": false
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "colorMode": "none", "graphMode": "area", "justifyMode": "auto" }
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Egress per rolling 24h (limit = 100 GB)",
+          "description": "Rolling 24h window, so a point is not a UTC calendar day: it sums the last 24 hours ending at that point. Use it for the trend, and the gauge on top for today's exact UTC-day spend.",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(increase(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[1d]))",
+              "legendFormat": "egress, last 24h"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "vector(107374182400)",
+              "legendFormat": "limit 100 GB"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1, "showPoints": "never" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "limit 100 GB" }, "properties": [ { "id": "custom.drawStyle", "value": "line" }, { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [8, 8] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }, { "id": "custom.fillOpacity", "value": 0 } ] }
+            ]
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["max"] }, "tooltip": { "mode": "multi" } }
+        }
+      ]
+    }
