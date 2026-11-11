@@ -42,15 +42,15 @@ data:
         {
           "id": 1,
           "type": "gauge",
-          "title": "Egress used today (UTC day)",
-          "description": "Share of the provider's daily egress allowance already spent since 00:00 UTC. At 100% the channel is clamped to 1 Mbit/s until the next UTC midnight.",
+          "title": "Daily allowance used (sent + received)",
+          "description": "Share of the provider's daily allowance already spent since 00:00 UTC, counting both directions as the provider does. Around 100% the channel is clamped to 1 Mbit/s until the next UTC midnight.",
           "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "100 * vpn_traffic_egress_today_bytes{node=\"homs\"} / vpn_traffic_limit_bytes{node=\"homs\"}",
+              "expr": "100 * vpn_traffic_metered_today_bytes{node=\"homs\"} / vpn_traffic_limit_bytes{node=\"homs\"}",
               "instant": true,
               "legendFormat": "used"
             }
@@ -77,15 +77,15 @@ data:
         {
           "id": 2,
           "type": "stat",
-          "title": "Egress today / limit",
-          "description": "Bytes sent on eth0 since 00:00 UTC against the provider's limit.",
+          "title": "Metered today / limit",
+          "description": "Sent + received since 00:00 UTC against the provider's limit. The provider counts both directions (calibrated against its own notice on 2026-11-10).",
           "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "vpn_traffic_egress_today_bytes{node=\"homs\"}",
+              "expr": "vpn_traffic_metered_today_bytes{node=\"homs\"}",
               "instant": true,
               "legendFormat": "{{value}}"
             },
@@ -117,7 +117,7 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "clamp_min(vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_egress_today_bytes{node=\"homs\"}, 0)",
+              "expr": "clamp_min(vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_metered_today_bytes{node=\"homs\"}, 0)",
               "instant": true
             }
           ],
@@ -149,7 +149,7 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "clamp_min((vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_egress_today_bytes{node=\"homs\"}) / sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m])), 0)",
+              "expr": "clamp_min((vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_metered_today_bytes{node=\"homs\"}) / sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m]) + rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m]), 0)",
               "instant": true
             }
           ],
@@ -234,8 +234,8 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(increase(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[1d]))",
-              "legendFormat": "egress, last 24h"
+              "expr": "sum(increase(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[1d])) + sum(increase(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[1d]))",
+              "legendFormat": "sent+received, last 24h"
             },
             {
               "refId": "B",

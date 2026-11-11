@@ -15,12 +15,12 @@ spec:
             summary: >-
               homs: {{ $value | humanizePercentage }} of the daily traffic allowance used
             description: >-
-              Egress on the entry node has reached {{ $value | humanizePercentage }} of the
+              Traffic counted in both directions on the entry node has reached {{ $value | humanizePercentage }} of the
               provider's fair-use limit for the current UTC day. When it hits 100% the channel
               is clamped to 1 Mbit/s until the next UTC midnight, which takes the whole service
               down for the rest of the day.
           expr: >-
-            vpn_traffic_egress_today_bytes{node="homs"}
+            vpn_traffic_metered_today_bytes{node="homs"}
             / vpn_traffic_limit_bytes{node="homs"} > 0.8
           for: 5m
           labels:
@@ -38,7 +38,7 @@ spec:
               collapses. The allowance resets at UTC midnight, which in practice lands in the
               early morning rather than at 00:00 sharp.
           expr: >-
-            vpn_traffic_egress_today_bytes{node="homs"}
+            vpn_traffic_metered_today_bytes{node="homs"}
             - vpn_traffic_limit_bytes{node="homs"} >= 0
           for: 2m
           labels:
@@ -59,7 +59,7 @@ spec:
               sum(rate(node_network_transmit_bytes_total{instance="homs.geracorp.org:8844",device="eth0"}[10m])) < 160000
             )
             and on() (
-              vpn_traffic_egress_today_bytes{node="homs"} >= 0.95 * vpn_traffic_limit_bytes{node="homs"}
+              vpn_traffic_metered_today_bytes{node="homs"} >= 0.95 * vpn_traffic_limit_bytes{node="homs"}
             )
           for: 15m
           labels:
