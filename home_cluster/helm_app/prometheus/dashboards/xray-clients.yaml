@@ -1,0 +1,275 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-vpn-traffic
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: kube-prometheus-stack
+  annotations:
+    grafana_folder: "VPN"
+data:
+  vpn-traffic.json: |-
+    {
+      "uid": "vpn-traffic",
+      "title": "VPN — traffic (homs)",
+      "tags": ["vpn", "traffic", "xray"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "editable": true,
+      "time": { "from": "now-24h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Totals",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Traffic today (both directions)",
+          "description": "All clients, since 00:00 UTC. Counted from the 3x-ui client counters, the way the provider counts it: sent + received.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_traffic_total_today_bytes",
+              "instant": true,
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Downloaded today",
+          "description": "Received by clients since 00:00 UTC.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 5, "x": 6, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_traffic_down_today_bytes",
+              "instant": true,
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Uploaded today",
+          "description": "Sent by clients since 00:00 UTC.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 5, "x": 11, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_traffic_up_today_bytes",
+              "instant": true,
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Clients online (5 min)",
+          "description": "Clients whose last connection is younger than 5 minutes.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "count((time() - xray_client_last_seen_timestamp) < 300)",
+              "instant": true,
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Throughput now",
+          "description": "Interface rate on the entry node, both directions.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"ens3\"}[5m]))*8/1e6",
+              "instant": true,
+              "legendFormat": "egress"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"ens3\"}[5m]))*8/1e6",
+              "instant": true,
+              "legendFormat": "ingress"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "Mbits", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "Per client",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "type": "table",
+          "title": "Per client: traffic and source IP",
+          "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 7 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_client_down_today_bytes",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_client_up_today_bytes",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "C",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_client_total_today_bytes",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "D",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_client_down_total_bytes + xray_client_up_total_bytes",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "E",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "xray_client_ip",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "F",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "(time() - xray_client_last_seen_timestamp) < 300",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            { "id": "merge", "options": {} },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true },
+                "renameByName": {
+                  "email": "Client",
+                  "ip": "Source IP",
+                  "Value #A": "Downloaded today",
+                  "Value #B": "Uploaded today",
+                  "Value #C": "Total today",
+                  "Value #D": "Cumulative",
+                  "Value #E": "ip_seen",
+                  "Value #F": "Online"
+                }
+              }
+            },
+            { "id": "sortBy", "options": { "sort": [ { "field": "Total today", "desc": true } ] } }
+          ],
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "short" },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Downloaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+              { "matcher": { "id": "byName", "options": "Uploaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+              { "matcher": { "id": "byName", "options": "Total today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+              { "matcher": { "id": "byName", "options": "Cumulative" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+              { "matcher": { "id": "byName", "options": "ip_seen" }, "properties": [ { "id": "custom.hidden", "value": true } ] },
+              { "matcher": { "id": "byName", "options": "Online" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "index": 1 }, "1": { "text": "yes", "index": 0 } } } ] } ] }
+            ]
+          },
+          "options": { "showHeader": true, "sortBy": [ { "displayName": "Total today", "desc": true } ] }
+        },
+        {
+          "id": 12,
+          "type": "bargauge",
+          "title": "Today by client",
+          "description": "Both directions, since 00:00 UTC.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 19 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "topk(10, xray_client_total_today_bytes)",
+              "instant": true,
+              "format": "time_series",
+              "legendFormat": "{{email}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "continuous-GrYlRd" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "valueMode": "color" }
+        }
+      ]
+    }
