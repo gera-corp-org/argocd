@@ -142,14 +142,14 @@ data:
           "id": 4,
           "type": "stat",
           "title": "ETA to throttle at current rate",
-          "description": "Remaining bytes divided by the egress rate of the last 30 minutes. Empty when traffic is idle.",
+          "description": "Remaining bytes divided by the combined sent+received rate of the last 30 minutes. Empty when traffic is idle.",
           "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "clamp_min((vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_metered_today_bytes{node=\"homs\"}) / sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m]) + rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m]), 0)",
+              "expr": "clamp_min((vpn_traffic_limit_bytes{node=\"homs\"} - vpn_traffic_metered_today_bytes{node=\"homs\"}) / (sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m])) + sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=\"eth0\"}[30m]))), 0)",
               "instant": true
             }
           ],
