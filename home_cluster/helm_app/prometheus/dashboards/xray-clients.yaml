@@ -210,7 +210,7 @@ data:
             {
               "refId": "F",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "(time() - xray_client_last_seen_timestamp) < 300",
+              "expr": "(time() - xray_client_last_seen_timestamp) < bool 300",
               "format": "table",
               "instant": true
             }
