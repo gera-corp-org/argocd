@@ -44,7 +44,7 @@ data:
           "id": 2,
           "type": "stat",
           "title": "Traffic today (both directions)",
-          "description": "All clients, since 00:00 UTC. Counted from the 3x-ui client counters, the way the provider counts it: sent + received.",
+          "description": "All clients, since 00:00 UTC, from the 3x-ui client counters: sent + received. Survives a reboot (interface counters do not).",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
           "targets": [
