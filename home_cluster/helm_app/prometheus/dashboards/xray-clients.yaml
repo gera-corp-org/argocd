@@ -338,6 +338,7 @@ data:
               { "matcher": { "id": "byName", "options": "Uploaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
               { "matcher": { "id": "byName", "options": "Total today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
               { "matcher": { "id": "byName", "options": "Cumulative" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
+              { "matcher": { "id": "byName", "options": "Active IPs" }, "properties": [ { "id": "custom.width", "value": 380 }, { "id": "cellOptions", "value": { "type": "auto", "wrapText": true } } ] },
               { "matcher": { "id": "byName", "options": "Online" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "index": 1 }, "1": { "text": "yes", "index": 0 } } } ] } ] }
             ]
           },
