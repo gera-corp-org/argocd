@@ -272,7 +272,7 @@ data:
           "id": 11,
           "type": "table",
           "title": "Per client: traffic and source IP",
-          "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Source IP is the most recent address the panel saw for that client (empty when the panel has not recorded one).",
+          "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Active IPs lists every source address the panel saw for that client in the last 15 minutes, newest first (empty when none were recorded).",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "gridPos": { "h": 12, "w": 24, "x": 0, "y": 25 },
           "targets": [
@@ -320,7 +320,7 @@ data:
                 "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true },
                 "renameByName": {
                   "email": "Client",
-                  "ip": "Source IP",
+                  "ip": "Active IPs",
                   "Value #A": "Downloaded today",
                   "Value #B": "Uploaded today",
                   "Value #C": "Total today",
