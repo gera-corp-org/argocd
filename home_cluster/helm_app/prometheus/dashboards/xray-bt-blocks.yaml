@@ -13,13 +13,20 @@ data:
     {
       "uid": "xray-bt-blocks",
       "title": "VPN — BitTorrent blocks (xray)",
-      "tags": ["vpn", "bittorrent", "xray"],
+      "tags": [
+        "vpn",
+        "bittorrent",
+        "xray"
+      ],
       "timezone": "browser",
       "schemaVersion": 39,
-      "version": 1,
+      "version": 2,
       "refresh": "1m",
       "editable": true,
-      "time": { "from": "now-24h", "to": "now" },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
       "templating": {
         "list": [
           {
@@ -38,25 +45,60 @@ data:
           "type": "stat",
           "title": "Blocked BitTorrent attempts (24h)",
           "description": "Connections dropped by the xray routing rule on the entry node — they never reach the exit.",
-          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
               "expr": "sum(increase(xray_bt_block_total[24h]))",
               "instant": true
             }
           ],
           "options": {
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
             "colorMode": "value",
             "graphMode": "area",
             "textMode": "value"
           },
           "fieldConfig": {
-            "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "thresholds" },
-              "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } },
+            "defaults": {
+              "unit": "short",
+              "noValue": "0",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              }
+            },
             "overrides": []
           }
         },
@@ -64,99 +106,621 @@ data:
           "id": 2,
           "type": "timeseries",
           "title": "Attempts per hour, by client",
-          "gridPos": { "h": 6, "w": 18, "x": 6, "y": 0 },
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": {
+            "h": 6,
+            "w": 18,
+            "x": 6,
+            "y": 0
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
               "expr": "sum by (client) (increase(xray_bt_block_total[1h]))"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 40, "stacking": { "mode": "normal" }, "lineWidth": 1 } },
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "drawStyle": "bars",
+                "fillOpacity": 40,
+                "stacking": {
+                  "mode": "normal"
+                },
+                "lineWidth": 1
+              }
+            },
             "overrides": []
           },
-          "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } }
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
         },
         {
           "id": 3,
           "type": "table",
           "title": "Totals by client / source IP (all time)",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
               "expr": "xray_bt_block_total",
               "format": "table",
               "instant": true
             }
           ],
           "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "client": "Client", "ip": "Source IP", "Value": "Blocked" } } },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Blocked", "desc": true } ] } }
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true
+                },
+                "renameByName": {
+                  "client": "Client",
+                  "ip": "Source IP",
+                  "Value": "Blocked"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "Blocked",
+                    "desc": true
+                  }
+                ]
+              }
+            }
           ],
-          "fieldConfig": { "defaults": {}, "overrides": [] }
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          }
         },
         {
           "id": 4,
           "type": "timeseries",
           "title": "When attempts happened (5m buckets)",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
               "expr": "sum by (client, ip) (increase(xray_bt_block_total[5m]))"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 5, "showPoints": "auto" } },
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 2,
+                "pointSize": 5,
+                "showPoints": "auto"
+              }
+            },
             "overrides": []
           },
-          "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } }
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
         },
         {
           "id": 5,
           "type": "table",
           "title": "Banned IPs (auto-ban)",
           "description": "Who is currently cut off the VPN port by the auto-ban watcher: source IP, the client profile behind it, time left, the exact moment the ban lifts and the network owner of that address (Team Cymru whois + reverse DNS). Click an IP for a full external lookup. Rows disappear when the ban expires.",
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 14
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
           "targets": [
-            { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "xray_autoban_banned", "format": "table", "instant": true },
-            { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_remaining_seconds)", "format": "table", "instant": true },
-            { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) ((time() + xray_autoban_remaining_seconds) * 1000)", "format": "table", "instant": true },
-            { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_trigger_events)", "format": "table", "instant": true },
-            { "refId": "E", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum without(client) (xray_autoban_whois)", "format": "table", "instant": true }
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_autoban_banned",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum without(client) (xray_autoban_remaining_seconds)",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "C",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum without(client) ((time() + xray_autoban_remaining_seconds) * 1000)",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "D",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum without(client) (xray_autoban_trigger_events)",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "refId": "E",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum without(client) (xray_autoban_whois)",
+              "format": "table",
+              "instant": true
+            }
           ],
           "transformations": [
-            { "id": "joinByField", "options": { "byField": "ip", "mode": "outer" } },
-            { "id": "organize", "options": {
-                "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "__name__": true, "job": true, "instance": true, "until": true, "Value #E": true },
-                "renameByName": { "ip": "IP", "client": "Client", "Value #A": "Banned", "Value #B": "Time left", "Value #C": "Expires at", "Value #D": "Events to ban", "org": "Provider", "asn": "ASN", "cc": "Country", "prefix": "Prefix", "ptr": "rDNS" },
-                "indexByName": { "IP": 0, "Client": 1, "Banned": 2, "Time left": 3, "Expires at": 4, "Events to ban": 5, "Provider": 6, "ASN": 7, "Country": 8, "Prefix": 9, "rDNS": 10 } } },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Time left", "desc": false } ] } }
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "ip",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Time 3": true,
+                  "Time 4": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "until": true,
+                  "Value #E": true
+                },
+                "renameByName": {
+                  "ip": "IP",
+                  "client": "Client",
+                  "Value #A": "Banned",
+                  "Value #B": "Time left",
+                  "Value #C": "Expires at",
+                  "Value #D": "Events to ban",
+                  "org": "Provider",
+                  "asn": "ASN",
+                  "cc": "Country",
+                  "prefix": "Prefix",
+                  "ptr": "rDNS"
+                },
+                "indexByName": {
+                  "IP": 0,
+                  "Client": 1,
+                  "Banned": 2,
+                  "Time left": 3,
+                  "Expires at": 4,
+                  "Events to ban": 5,
+                  "Provider": 6,
+                  "ASN": 7,
+                  "Country": 8,
+                  "Prefix": 9,
+                  "rDNS": 10
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "Time left",
+                    "desc": false
+                  }
+                ]
+              }
+            }
           ],
           "fieldConfig": {
-            "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false } },
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              }
+            },
             "overrides": [
-              { "matcher": { "id": "byName", "options": "IP" }, "properties": [
-                  { "id": "links", "value": [
-                      { "title": "ipinfo.io", "url": "https://ipinfo.io/${__value.text}", "targetBlank": true },
-                      { "title": "RIPE DB", "url": "https://apps.db.ripe.net/db-web-ui/query?searchtext=${__value.text}", "targetBlank": true } ] } ] },
-              { "matcher": { "id": "byName", "options": "Expires at" }, "properties": [ { "id": "unit", "value": "dateTimeAsIso" } ] },
-              { "matcher": { "id": "byName", "options": "Time left" }, "properties": [
-                  { "id": "unit", "value": "dtdurations" },
-                  { "id": "custom.cellOptions", "value": { "type": "color-text" } },
-                  { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 1800 }, { "color": "green", "value": 5400 } ] } } ] },
-              { "matcher": { "id": "byName", "options": "Banned" }, "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }, { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "color": "green" }, "1": { "text": "YES", "color": "red" } } } ] } ] }
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "IP"
+                },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "ipinfo.io",
+                        "url": "https://ipinfo.io/${__value.text}",
+                        "targetBlank": true
+                      },
+                      {
+                        "title": "RIPE DB",
+                        "url": "https://apps.db.ripe.net/db-web-ui/query?searchtext=${__value.text}",
+                        "targetBlank": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Expires at"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Time left"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dtdurations"
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 1800
+                        },
+                        {
+                          "color": "green",
+                          "value": 5400
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Banned"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background",
+                      "mode": "basic"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "no",
+                            "color": "green"
+                          },
+                          "1": {
+                            "text": "YES",
+                            "color": "red"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             ]
           },
-          "options": { "showHeader": true, "cellHeight": "sm", "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" } }
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "id": 10,
+          "type": "stat",
+          "title": "Active bans",
+          "description": "Source IPs currently blocked from the VPN port by xray-autoban (2h per ban).",
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 22
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_autoban_active_bans",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "0",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 11,
+          "type": "stat",
+          "title": "Blocked events (10m window)",
+          "description": "Signature blocks across all clients inside the auto-ban window. 60 events from one IP triggers a ban.",
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 22
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_autoban_events_window",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "0",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 12,
+          "type": "stat",
+          "title": "Auto-ban mode",
+          "description": "0 = live nftables bans, 1 = dry run (log only).",
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 22
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_autoban_dry_run",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "value"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "0",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "live",
+                      "color": "green"
+                    },
+                    "1": {
+                      "text": "dry run",
+                      "color": "orange"
+                    }
+                  }
+                }
+              ]
+            },
+            "overrides": []
+          }
         }
       ]
     }
