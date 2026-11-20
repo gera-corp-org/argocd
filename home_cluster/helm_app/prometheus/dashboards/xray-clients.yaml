@@ -214,7 +214,7 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum by (email) (rate(xray_client_down_total_bytes{instance=\"homs.geracorp.org:8844\"}[5m]))*8/1e6",
+              "expr": "sum by (email) (rate(xray_client_down_total_bytes{instance=\"homs.geracorp.org:8844\"}[2m]))*8/1e6",
               "legendFormat": "{{email}}",
               "format": "time_series"
             }
@@ -243,7 +243,7 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum by (email) (rate(xray_client_up_total_bytes{instance=\"homs.geracorp.org:8844\"}[5m]))*8/1e6",
+              "expr": "sum by (email) (rate(xray_client_up_total_bytes{instance=\"homs.geracorp.org:8844\"}[2m]))*8/1e6",
               "legendFormat": "{{email}}",
               "format": "time_series"
             }
