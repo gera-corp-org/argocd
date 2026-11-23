@@ -139,14 +139,14 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"ens[0-9]+\"}[5m]))*8/1e6",
+              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
               "instant": true,
               "legendFormat": "egress"
             },
             {
               "refId": "B",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"ens[0-9]+\"}[5m]))*8/1e6",
+              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
               "instant": true,
               "legendFormat": "ingress"
             }
@@ -168,14 +168,14 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"ens[0-9]+\"}[2m]))*8/1e6",
+              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
               "legendFormat": "download (clients)",
               "format": "time_series"
             },
             {
               "refId": "B",
               "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"ens[0-9]+\"}[2m]))*8/1e6",
+              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
               "legendFormat": "upload (clients)",
               "format": "time_series"
             }
