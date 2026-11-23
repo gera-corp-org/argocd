@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vpn-traffic-limit
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+spec:
+  groups:
+    - name: vpn-traffic-limit
+      rules:
+        - alert: VPNTrafficDailyWarning
+          expr: |
+            vpn_traffic_metered_today_bytes / vpn_traffic_limit_bytes > 0.70
+              and vpn_traffic_limit_bytes > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              VPN daily traffic on {{ $labels.node }} is at {{ $value | humanizePercentage }} of the provider limit
+            description: >-
+              {{ $labels.node }} has used {{ $value | humanizePercentage }} of its daily fair-use allowance
+              (inbound + outbound, UTC day). At 100% the provider throttles the link to 1 Mbit/s until the
+              next UTC-day reset, so heavy clients should be moved to another entry node.
+        - alert: VPNTrafficDailyCritical
+          expr: |
+            vpn_traffic_metered_today_bytes / vpn_traffic_limit_bytes > 0.90
+              and vpn_traffic_limit_bytes > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: >-
+              VPN daily traffic on {{ $labels.node }} at {{ $value | humanizePercentage }} — throttling is imminent
+            description: >-
+              Only about {{ $value | humanizePercentage }} of the daily allowance has been consumed, leaving
+              very little headroom before the 1 Mbit/s throttle kicks in. Move traffic off {{ $labels.node }}
+              or accept degraded speed until the UTC-day reset.
