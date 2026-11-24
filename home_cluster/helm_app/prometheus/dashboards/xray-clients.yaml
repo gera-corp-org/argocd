@@ -13,22 +13,49 @@ data:
     {
       "uid": "vpn-traffic",
       "title": "VPN — traffic (homs)",
-      "tags": ["vpn", "traffic", "xray"],
+      "tags": [
+        "vpn",
+        "traffic",
+        "xray"
+      ],
       "timezone": "browser",
       "schemaVersion": 39,
       "version": 1,
       "refresh": "1m",
       "editable": true,
-      "time": { "from": "now-24h", "to": "now" },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
       "templating": {
         "list": [
           {
-            "name": "datasource",
-            "label": "Datasource",
-            "type": "datasource",
-            "query": "prometheus",
-            "current": {},
-            "hide": 0
+            "name": "node",
+            "label": "Узел",
+            "type": "custom",
+            "query": "homs,vip",
+            "options": [
+              {
+                "text": "homs",
+                "value": "homs",
+                "selected": true
+              },
+              {
+                "text": "vip",
+                "value": "vip",
+                "selected": false
+              }
+            ],
+            "current": {
+              "text": "homs",
+              "value": "homs",
+              "selected": true
+            },
+            "multi": false,
+            "includeAll": true,
+            "allValue": ".*",
+            "hide": 0,
+            "skipUrlSync": false
           }
         ]
       },
@@ -37,167 +64,421 @@ data:
           "id": 1,
           "type": "row",
           "title": "Totals",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
           "collapsed": false
         },
         {
           "id": 2,
           "type": "stat",
           "title": "Payload today (clients)",
-          "description": "What the clients actually moved since 00:00 UTC, from the 3x-ui counters. This is payload, not the provider\u0027s counter: on a relay node every byte crosses the interface twice, so the provider sees roughly double this number.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
+          "description": "What the clients actually moved since 00:00 UTC, from the 3x-ui counters. This is payload, not the provider's counter: on a relay node every byte crosses the interface twice, so the provider sees roughly double this number.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_traffic_total_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (node) (xray_traffic_total_today_bytes{node=~\"$node\"})",
               "instant": true,
               "format": "time_series"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "defaults": {
+              "unit": "bytes",
+              "decimals": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 3,
           "type": "stat",
           "title": "Downloaded today",
           "description": "Received by clients since 00:00 UTC.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_traffic_down_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (node) (xray_traffic_down_today_bytes{node=~\"$node\"})",
               "instant": true,
               "format": "time_series"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "defaults": {
+              "unit": "bytes",
+              "decimals": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 4,
           "type": "stat",
           "title": "Uploaded today",
           "description": "Sent by clients since 00:00 UTC.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 8,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_traffic_up_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (node) (xray_traffic_up_today_bytes{node=~\"$node\"})",
               "instant": true,
               "format": "time_series"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "defaults": {
+              "unit": "bytes",
+              "decimals": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 5,
           "type": "stat",
           "title": "Clients online (5 min)",
           "description": "Clients whose last connection is younger than 5 minutes.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 12,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "count((time() - xray_client_last_seen_timestamp) < 300)",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count((time() - xray_client_last_seen_timestamp{node=~\"$node\"}) < 300)",
               "instant": true,
               "format": "time_series"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 6,
           "type": "stat",
           "title": "Throughput now",
           "description": "Interface rate on the entry node, both directions.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 16,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(node_network_transmit_bytes_total{node=~\"$node\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
               "instant": true,
               "legendFormat": "egress"
             },
             {
               "refId": "B",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(node_network_receive_bytes_total{node=~\"$node\",device=~\"(ens|eth)[0-9]+\"}[5m]))*8/1e6",
               "instant": true,
               "legendFormat": "ingress"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "Mbits", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "defaults": {
+              "unit": "Mbits",
+              "decimals": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 12,
           "type": "stat",
           "title": "Provider counter (limit)",
           "description": "Bytes counted by the hosting provider since 00:00 UTC: interface sent + received, which is roughly twice the client payload. This is the number the daily fair-use limit is measured against — 100% means the link is throttled to 1 Mbit/s until the UTC-day reset.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
               "expr": "max by (node) (vpn_traffic_metered_today_bytes) / max by (node) (vpn_traffic_limit_bytes)",
               "instant": true,
               "format": "time_series"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "percentunit", "decimals": 1, "min": 0, "max": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.7 }, { "color": "red", "value": 0.9 } ] } },
+            "defaults": {
+              "unit": "percentunit",
+              "decimals": 1,
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.7
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.9
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto"
+          }
         },
         {
           "id": 7,
           "type": "timeseries",
           "title": "Load: download and upload (Mbit/s)",
           "description": "Interface rate on the entry node. Download is what clients pull (node egress), upload is what they push (node ingress). The dashed line marks the 200 Mbit port.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 9, "w": 24, "x": 0, "y": 6 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 6
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_transmit_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(node_network_transmit_bytes_total{node=~\"$node\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
               "legendFormat": "download (clients)",
               "format": "time_series"
             },
             {
               "refId": "B",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum(rate(node_network_receive_bytes_total{instance=\"homs.geracorp.org:8844\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(rate(node_network_receive_bytes_total{node=~\"$node\",device=~\"(ens|eth)[0-9]+\"}[2m]))*8/1e6",
               "legendFormat": "upload (clients)",
               "format": "time_series"
             }
@@ -211,18 +492,41 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never",
                 "spanNulls": false,
-                "thresholdsStyle": { "mode": "dashed", "lineWidth": 1 }
+                "thresholdsStyle": {
+                  "mode": "dashed",
+                  "lineWidth": 1
+                }
               },
               "thresholds": {
                 "mode": "absolute",
-                "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 100 } ]
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 100
+                  }
+                ]
               }
             },
             "overrides": []
           },
           "options": {
-            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] },
-            "tooltip": { "mode": "multi", "sort": "desc" }
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           }
         },
         {
@@ -230,13 +534,24 @@ data:
           "type": "timeseries",
           "title": "Download per client (Mbit/s)",
           "description": "Per-client download rate, from the panel counters sampled every minute. Peaks per user.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 15
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum by (email) (rate(xray_client_down_total_bytes{instance=\"homs.geracorp.org:8844\"}[2m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (email) (rate(xray_client_down_total_bytes{node=~\"$node\"}[2m]))*8/1e6",
               "legendFormat": "{{email}}",
               "format": "time_series"
             }
@@ -245,13 +560,31 @@ data:
             "defaults": {
               "unit": "Mbits",
               "min": 0,
-              "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": false }
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false
+              }
             },
             "overrides": []
           },
           "options": {
-            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"], "sortBy": "Max", "sortDesc": true },
-            "tooltip": { "mode": "multi", "sort": "desc" }
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           }
         },
         {
@@ -259,13 +592,24 @@ data:
           "type": "timeseries",
           "title": "Upload per client (Mbit/s)",
           "description": "Per-client upload rate, from the panel counters sampled every minute. Peaks per user.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 15
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "sum by (email) (rate(xray_client_up_total_bytes{instance=\"homs.geracorp.org:8844\"}[2m]))*8/1e6",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (email) (rate(xray_client_up_total_bytes{node=~\"$node\"}[2m]))*8/1e6",
               "legendFormat": "{{email}}",
               "format": "time_series"
             }
@@ -274,20 +618,43 @@ data:
             "defaults": {
               "unit": "Mbits",
               "min": 0,
-              "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": false }
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false
+              }
             },
             "overrides": []
           },
           "options": {
-            "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"], "sortBy": "Max", "sortDesc": true },
-            "tooltip": { "mode": "multi", "sort": "desc" }
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           }
         },
         {
           "id": 10,
           "type": "row",
           "title": "Per client",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 24
+          },
           "collapsed": false
         },
         {
@@ -295,51 +662,82 @@ data:
           "type": "table",
           "title": "Per client: traffic and source IP",
           "description": "Today is counted since 00:00 UTC; cumulative is since the client was created in the panel. Active IPs lists every source address the panel saw for that client in the last 15 minutes, newest first (empty when none were recorded).",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 25 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 25
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_client_down_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_client_down_today_bytes{node=~\"$node\"}",
               "format": "table",
               "instant": true
             },
             {
               "refId": "B",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_client_up_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_client_up_today_bytes{node=~\"$node\"}",
               "format": "table",
               "instant": true
             },
             {
               "refId": "C",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_client_total_today_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_client_total_today_bytes{node=~\"$node\"}",
               "format": "table",
               "instant": true
             },
             {
               "refId": "D",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "xray_client_down_total_bytes + xray_client_up_total_bytes",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "xray_client_down_total_bytes{node=~\"$node\"} + xray_client_up_total_bytes{node=~\"$node\"}",
               "format": "table",
               "instant": true
             },
             {
               "refId": "E",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "(time() - xray_client_last_seen_timestamp) < bool 300",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(time() - xray_client_last_seen_timestamp{node=~\"$node\"}) < bool 300",
               "format": "table",
               "instant": true
             }
           ],
           "transformations": [
-            { "id": "merge", "options": {} },
+            {
+              "id": "merge",
+              "options": {}
+            },
             {
               "id": "organize",
               "options": {
-                "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true },
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true
+                },
                 "renameByName": {
                   "email": "Client",
                   "ip": "Active IPs",
@@ -351,43 +749,192 @@ data:
                 }
               }
             },
-            { "id": "sortBy", "options": { "sort": [ { "field": "Total today", "desc": true } ] } }
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "Total today",
+                    "desc": true
+                  }
+                ]
+              }
+            }
           ],
           "fieldConfig": {
-            "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "short" },
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              },
+              "unit": "short"
+            },
             "overrides": [
-              { "matcher": { "id": "byName", "options": "Downloaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
-              { "matcher": { "id": "byName", "options": "Uploaded today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
-              { "matcher": { "id": "byName", "options": "Total today" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
-              { "matcher": { "id": "byName", "options": "Cumulative" }, "properties": [ { "id": "unit", "value": "bytes" } ] },
-              { "matcher": { "id": "byName", "options": "Active IPs" }, "properties": [ { "id": "custom.width", "value": 380 }, { "id": "cellOptions", "value": { "type": "auto", "wrapText": true } } ] },
-              { "matcher": { "id": "byName", "options": "Online" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "index": 1 }, "1": { "text": "yes", "index": 0 } } } ] } ] }
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Downloaded today"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Uploaded today"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Total today"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Cumulative"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Active IPs"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 380
+                  },
+                  {
+                    "id": "cellOptions",
+                    "value": {
+                      "type": "auto",
+                      "wrapText": true
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Online"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "no",
+                            "index": 1
+                          },
+                          "1": {
+                            "text": "yes",
+                            "index": 0
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             ]
           },
-          "options": { "showHeader": true, "sortBy": [ { "displayName": "Total today", "desc": true } ] }
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Total today",
+                "desc": true
+              }
+            ]
+          }
         },
         {
           "id": 12,
           "type": "bargauge",
           "title": "Today by client",
           "description": "Both directions, since 00:00 UTC.",
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 37 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 37
+          },
           "targets": [
             {
               "refId": "A",
-              "datasource": { "type": "prometheus", "uid": "${datasource}" },
-              "expr": "topk(10, xray_client_total_today_bytes)",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "topk(10, xray_client_total_today_bytes{node=~\"$node\"})",
               "instant": true,
               "format": "time_series",
               "legendFormat": "{{email}}"
             }
           ],
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "decimals": 1, "color": { "mode": "continuous-GrYlRd" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } },
+            "defaults": {
+              "unit": "bytes",
+              "decimals": 1,
+              "color": {
+                "mode": "continuous-GrYlRd"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
             "overrides": []
           },
-          "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "valueMode": "color" }
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "valueMode": "color"
+          }
         }
       ]
     }
