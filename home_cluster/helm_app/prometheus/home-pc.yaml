@@ -13,8 +13,10 @@ spec:
     - labels:
         job: home-pc
       targets:
+        # OhmGraphite on the desktop. 192.168.100.53 was its old LAN address and has
+        # been dead for weeks while the exporter kept answering on 10.0.0.11, so the
+        # stale entry only produced a permanent TargetDown.
         - 10.0.0.11:4445
-        - 192.168.100.53:4445
   relabelings:
     - sourceLabels: [__address__]
       regex: ([^:]+)(?::\d+)?
