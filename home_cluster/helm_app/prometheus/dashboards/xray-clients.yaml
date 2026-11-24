@@ -43,10 +43,10 @@ data:
         {
           "id": 2,
           "type": "stat",
-          "title": "Traffic today (both directions)",
-          "description": "All clients, since 00:00 UTC, from the 3x-ui client counters: sent + received. Survives a reboot (interface counters do not).",
+          "title": "Payload today (clients)",
+          "description": "What the clients actually moved since 00:00 UTC, from the 3x-ui counters. This is payload, not the provider\u0027s counter: on a relay node every byte crosses the interface twice, so the provider sees roughly double this number.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+          "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
           "targets": [
             {
               "refId": "A",
@@ -68,7 +68,7 @@ data:
           "title": "Downloaded today",
           "description": "Received by clients since 00:00 UTC.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 5, "x": 6, "y": 1 },
+          "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
           "targets": [
             {
               "refId": "A",
@@ -90,7 +90,7 @@ data:
           "title": "Uploaded today",
           "description": "Sent by clients since 00:00 UTC.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 5, "x": 11, "y": 1 },
+          "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
           "targets": [
             {
               "refId": "A",
@@ -112,7 +112,7 @@ data:
           "title": "Clients online (5 min)",
           "description": "Clients whose last connection is younger than 5 minutes.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+          "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
           "targets": [
             {
               "refId": "A",
@@ -134,7 +134,7 @@ data:
           "title": "Throughput now",
           "description": "Interface rate on the entry node, both directions.",
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+          "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
           "targets": [
             {
               "refId": "A",
@@ -153,6 +153,28 @@ data:
           ],
           "fieldConfig": {
             "defaults": { "unit": "Mbits", "decimals": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } },
+            "overrides": []
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
+        },
+        {
+          "id": 12,
+          "type": "stat",
+          "title": "Provider counter (limit)",
+          "description": "Bytes counted by the hosting provider since 00:00 UTC: interface sent + received, which is roughly twice the client payload. This is the number the daily fair-use limit is measured against — 100% means the link is throttled to 1 Mbit/s until the UTC-day reset.",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "prometheus", "uid": "${datasource}" },
+              "expr": "max by (node) (vpn_traffic_metered_today_bytes) / max by (node) (vpn_traffic_limit_bytes)",
+              "instant": true,
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "decimals": 1, "min": 0, "max": 1, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.7 }, { "color": "red", "value": 0.9 } ] } },
             "overrides": []
           },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "auto" }
