@@ -19,6 +19,11 @@ spec:
   staticConfigs:
     - labels:
         job: VPN-server
+        node: trol
       targets:
         - trol.geracorp.org:8844
+    - labels:
+        job: VPN-server
+        node: homs
+      targets:
         - homs.geracorp.org:8844

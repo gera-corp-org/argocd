@@ -24,6 +24,7 @@ spec:
   staticConfigs:
     - labels:
         job: vless-exporter
+        node: homs
       targets:
         # Exporter lives on homs only (measures homs -> Frankfurt path).
         - homs.geracorp.org:8844

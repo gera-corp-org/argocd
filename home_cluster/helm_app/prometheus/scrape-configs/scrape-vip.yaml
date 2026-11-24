@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: vip-node
+  namespace: monitoring
+  labels:
+    prometheus: test
+    release: prom
+spec:
+  # Home x-ui node behind vip.geracorp.org (192.168.1.88). It sits on the same LAN
+  # as the cluster, so no TLS front and no basic auth are needed — plain HTTP over
+  # the internal network only.
+  scheme: HTTP
+  metricsPath: /metrics
+  staticConfigs:
+    - labels:
+        job: VPN-server
+        node: vip
+      targets:
+        - 192.168.1.88:9100
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: vip-vless
+  namespace: monitoring
+  labels:
+    prometheus: vless
+    release: prom
+spec:
+  scheme: HTTP
+  metricsPath: /metrics
+  scrapeInterval: 60s
+  scrapeTimeout: 30s
+  staticConfigs:
+    - labels:
+        job: vless-exporter
+        node: vip
+      targets:
+        - 192.168.1.88:9600
