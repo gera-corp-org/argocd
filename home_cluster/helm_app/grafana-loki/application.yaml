@@ -48,6 +48,12 @@ metadata:
   name: grafana-loki
   annotations:
     argocd.argoproj.io/sync-wave: '3'
+    # Как у kube-prometheus-stack: ServerSideApply=true неявно включает
+    # server-side diff, его dry-run apply PVC отклоняется из-за неизменяемых
+    # spec.volumeName/storageClassName привязанного тома, ignoreDifferences
+    # на этот dry-run не действует. С ArgoCD 3.6.2 (19.11.2026) приложение
+    # из-за этого висело в Unknown и не синхронизировалось.
+    argocd.argoproj.io/compare-options: ServerSideDiff=false
 spec:
   destination:
     name: in-cluster

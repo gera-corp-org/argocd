@@ -3,6 +3,12 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: statedash
+  annotations:
+    # Same reason as kube-prometheus-stack and statedash-demo: ServerSideApply=true
+    # implicitly enables server-side diff, whose PVC dry-run apply is rejected for
+    # the immutable spec.volumeName/storageClassName of a bound claim. Stuck in
+    # Unknown since ArgoCD 3.6.2 (2026-11-19 / 22).
+    argocd.argoproj.io/compare-options: ServerSideDiff=false
 spec:
   destination:
     name: in-cluster
