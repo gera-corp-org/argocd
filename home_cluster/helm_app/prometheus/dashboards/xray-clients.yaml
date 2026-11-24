@@ -104,7 +104,8 @@ data:
               },
               "expr": "max by (node) (xray_traffic_total_today_bytes{node=~\"$node\"})",
               "instant": true,
-              "format": "time_series"
+              "format": "time_series",
+              "legendFormat": "{{node}}"
             }
           ],
           "fieldConfig": {
@@ -163,7 +164,8 @@ data:
               },
               "expr": "max by (node) (xray_traffic_down_today_bytes{node=~\"$node\"})",
               "instant": true,
-              "format": "time_series"
+              "format": "time_series",
+              "legendFormat": "{{node}}"
             }
           ],
           "fieldConfig": {
@@ -222,7 +224,8 @@ data:
               },
               "expr": "max by (node) (xray_traffic_up_today_bytes{node=~\"$node\"})",
               "instant": true,
-              "format": "time_series"
+              "format": "time_series",
+              "legendFormat": "{{node}}"
             }
           ],
           "fieldConfig": {
@@ -409,7 +412,8 @@ data:
               },
               "expr": "max by (node) (vpn_traffic_metered_today_bytes) / max by (node) (vpn_traffic_limit_bytes)",
               "instant": true,
-              "format": "time_series"
+              "format": "time_series",
+              "legendFormat": "{{node}}"
             }
           ],
           "fieldConfig": {
