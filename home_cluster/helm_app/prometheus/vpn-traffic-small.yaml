@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: vpn-traffic-small
+  namespace: monitoring
+  labels:
+    prometheus: home-pc
+    release: prom
+spec:
+  # The entry node writes its daily counter into node_exporter's textfile directory.
+  # The full /node/metrics payload is ~150 KB and does not fit into a scrape timeout
+  # once the provider throttles the link to 1 Mbit/s, so the counter goes blind exactly
+  # when it matters most. This job reads the 1.4 KB textfile straight from nginx.
+  scheme: HTTPS
+  metricsPath: /textfile/vpn_traffic.prom
+  scrapeTimeout: 25s
+  staticConfigs:
+    - labels:
+        job: vpn-traffic-small
+      targets:
+        - homs.geracorp.org:8844
+  basicAuth:
+    username:
+      name: metrics-basic-auth
+      key: username
+    password:
+      name: metrics-basic-auth
+      key: password
