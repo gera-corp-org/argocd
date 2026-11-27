@@ -1,0 +1,79 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: xray-clients-small
+  namespace: monitoring
+  labels:
+    prometheus: test
+    release: prom
+spec:
+  # Per-client counters live in a 12 KB textfile: at 1 Mbit/s the 150 KB
+  # /node/metrics payload misses the scrape timeout and the clients panels go blind.
+  scheme: HTTPS
+  metricsPath: /textfile/xray_clients.prom
+  scrapeTimeout: 25s
+  basicAuth:
+    username:
+      name: metrics-basic-auth
+      key: username
+    password:
+      name: metrics-basic-auth
+      key: password
+  staticConfigs:
+    - labels:
+        job: xray-clients-small
+        node: homs
+      targets:
+        - homs.geracorp.org:8844
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: xray-bt-small
+  namespace: monitoring
+  labels:
+    prometheus: test
+    release: prom
+spec:
+  scheme: HTTPS
+  metricsPath: /textfile/xray_bt_blocks.prom
+  scrapeTimeout: 25s
+  basicAuth:
+    username:
+      name: metrics-basic-auth
+      key: username
+    password:
+      name: metrics-basic-auth
+      key: password
+  staticConfigs:
+    - labels:
+        job: xray-bt-small
+        node: homs
+      targets:
+        - homs.geracorp.org:8844
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: xray-autoban-small
+  namespace: monitoring
+  labels:
+    prometheus: test
+    release: prom
+spec:
+  scheme: HTTPS
+  metricsPath: /textfile/xray_autoban.prom
+  scrapeTimeout: 25s
+  basicAuth:
+    username:
+      name: metrics-basic-auth
+      key: username
+    password:
+      name: metrics-basic-auth
+      key: password
+  staticConfigs:
+    - labels:
+        job: xray-autoban-small
+        node: homs
+      targets:
+        - homs.geracorp.org:8844

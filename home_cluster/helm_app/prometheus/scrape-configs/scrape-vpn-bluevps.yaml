@@ -22,6 +22,37 @@ spec:
         node: trol
       targets:
         - trol.geracorp.org:8844
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: vpn-server-homs
+  namespace: monitoring
+  labels:
+    prometheus: test
+    release: prom
+spec:
+  # The entry node sits behind a 1 Mbit/s provider throttle for most of the day:
+  # its /node/metrics payload (~150 KB) never fits into the scrape timeout, so the
+  # whole job flapped and every xray_*/vpn_traffic_* series vanished with it.
+  # The same numbers live in node_exporter's textfile directory (a few KB each) and
+  # are scraped by vpn-traffic-small / xray-small-homs, so this job keeps only the
+  # node_* families and drops the duplicated ones.
+  scheme: HTTPS
+  metricsPath: /node/metrics
+  scrapeTimeout: 25s
+  basicAuth:
+    username:
+      name: metrics-basic-auth
+      key: username
+    password:
+      name: metrics-basic-auth
+      key: password
+  metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: (xray_.*|vpn_traffic_.*)
+      action: drop
+  staticConfigs:
     - labels:
         job: VPN-server
         node: homs
